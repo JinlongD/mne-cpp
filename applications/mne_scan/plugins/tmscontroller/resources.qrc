@@ -1,0 +1,16 @@
+<RCC>
+    <qresource prefix="/images">
+        <file>images/icons/Bild1.png</file>
+        <file>images/icons/Bild2.png</file>
+        <file>images/icons/Bild3.png</file>
+        <file>images/icons/no.png</file>
+        <file>images/icons/yes.png</file>
+        <file>images/icons/Control.png</file>
+        <file>images/icons/Formen1.png</file>
+        <file>images/icons/Formen2.png</file>
+    </qresource>
+    <qresource prefix="/configurations">
+	<file>configuration/rapid_config.json</file>
+        <file>configuration/rapid_system_info.json</file>
+    </qresource>
+</RCC>

@@ -1,0 +1,354 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>TmsControllerWidgetGui</class>
+ <widget class="QWidget" name="TmsControllerWidgetGui">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>364</width>
+    <height>490</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <layout class="QGridLayout" name="gridLayout">
+     <item row="9" column="0">
+      <widget class="QLabel" name="m_qLabel_deadTime">
+       <property name="text">
+        <string>Dead Time [s]:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="6">
+      <spacer name="horizontalSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>20</width>
+         <height>17</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item row="15" column="0">
+      <spacer name="verticalSpacer">
+       <property name="orientation">
+        <enum>Qt::Vertical</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>17</width>
+         <height>37</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item row="14" column="3" colspan="3">
+      <widget class="QPushButton" name="m_qPushButton_quickFire">
+       <property name="text">
+        <string>Fire</string>
+       </property>
+      </widget>
+     </item>
+     <item row="10" column="2">
+      <widget class="QDoubleSpinBox" name="m_qDoubleSpinBox_Wait">
+       <property name="maximum">
+        <double>100.000000000000000</double>
+       </property>
+       <property name="singleStep">
+        <double>0.100000000000000</double>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="0">
+      <widget class="QLabel" name="m_qLabel_superRapid">
+       <property name="text">
+        <string>SuperRapid:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0">
+      <widget class="QLabel" name="m_qLabel_portName">
+       <property name="text">
+        <string>Serial Port:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="0">
+      <widget class="QLabel" name="m_qLabel_deviceVersion">
+       <property name="text">
+        <string>Device (version):</string>
+       </property>
+      </widget>
+     </item>
+     <item row="10" column="0">
+      <widget class="QLabel" name="m_qLabel_Wait">
+       <property name="text">
+        <string>Wait [s]:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="11" column="0">
+      <widget class="QLabel" name="m_qLabel_Frequency">
+       <property name="text">
+        <string>Frequency [Hz]:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="2">
+      <widget class="QLineEdit" name="m_qLineEdit_unlockCode"/>
+     </item>
+     <item row="7" column="0">
+      <widget class="QLabel" name="m_qLabel_Power">
+       <property name="text">
+        <string>Power:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="3" colspan="3">
+      <widget class="QLabel" name="m_qLabel_Version">
+       <property name="text">
+        <string>(NV 7.2.0)</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="2">
+      <widget class="QComboBox" name="m_qComboBox_operatingVoltage">
+       <item>
+        <property name="text">
+         <string>240 Volt</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>115 Volt</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item row="6" column="0">
+      <widget class="QLabel" name="m_qLabel_Mode">
+       <property name="text">
+        <string>Pulse Mode:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="12" column="0">
+      <widget class="QLabel" name="m_qLabel_Duration">
+       <property name="text">
+        <string>Duration [s]:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="6" column="2" colspan="2">
+      <widget class="QComboBox" name="m_qComboBox_Mode">
+       <property name="currentIndex">
+        <number>0</number>
+       </property>
+       <item>
+        <property name="text">
+         <string>Single Pulse</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>rTMS</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item row="0" column="2">
+      <widget class="QComboBox" name="m_qComboBox_Device">
+       <item>
+        <property name="text">
+         <string>Rapid</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item row="8" column="0">
+      <widget class="QLabel" name="m_qLabel_Pulses">
+       <property name="text">
+        <string>Pulses [s]:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="7" column="2">
+      <widget class="QComboBox" name="m_qComboBox_Power">
+       <item>
+        <property name="text">
+         <string>Static</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Dynamic</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item row="7" column="5">
+      <widget class="QLabel" name="m_qLabel_powerPercent">
+       <property name="text">
+        <string>in %</string>
+       </property>
+      </widget>
+     </item>
+     <item row="11" column="2">
+      <widget class="QSpinBox" name="m_qSpinBox_Frequency">
+       <property name="maximum">
+        <number>50</number>
+       </property>
+       <property name="value">
+        <number>10</number>
+       </property>
+      </widget>
+     </item>
+     <item row="6" column="1" rowspan="7">
+      <widget class="Line" name="m_qLine_lowVertical">
+       <property name="orientation">
+        <enum>Qt::Vertical</enum>
+       </property>
+      </widget>
+     </item>
+     <item row="5" column="0" colspan="6">
+      <widget class="Line" name="m_qLine_midHorizontal">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+      </widget>
+     </item>
+     <item row="7" column="3" colspan="2">
+      <widget class="QSpinBox" name="m_qSpinBox_Power">
+       <property name="maximum">
+        <number>100</number>
+       </property>
+       <property name="value">
+        <number>20</number>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="2">
+      <widget class="QComboBox" name="m_qComboBox_superRapid">
+       <item>
+        <property name="text">
+         <string>0</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>1</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>2</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item row="8" column="2">
+      <widget class="QSpinBox" name="m_qSpinBox_Pulses">
+       <property name="maximum">
+        <number>50</number>
+       </property>
+       <property name="value">
+        <number>1</number>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1" rowspan="5">
+      <widget class="Line" name="m_qLine_upVertical">
+       <property name="orientation">
+        <enum>Qt::Vertical</enum>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="0">
+      <widget class="QLabel" name="m_qLabel_operatingVoltage">
+       <property name="text">
+        <string>Operating Voltage:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="12" column="2">
+      <widget class="QDoubleSpinBox" name="m_qDoubleSpinBox_Duration">
+       <property name="maximum">
+        <double>100.000000000000000</double>
+       </property>
+       <property name="singleStep">
+        <double>1.000000000000000</double>
+       </property>
+      </widget>
+     </item>
+     <item row="15" column="4" colspan="2">
+      <spacer name="verticalSpacer_2">
+       <property name="orientation">
+        <enum>Qt::Vertical</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>17</width>
+         <height>18</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item row="14" column="0">
+      <widget class="QPushButton" name="m_qPushButton_Default">
+       <property name="text">
+        <string>Default</string>
+       </property>
+      </widget>
+     </item>
+     <item row="9" column="2">
+      <widget class="QSpinBox" name="m_qSpinBox_deadTime">
+       <property name="maximum">
+        <number>1000</number>
+       </property>
+       <property name="value">
+        <number>3</number>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="0">
+      <widget class="QLabel" name="m_qLabel_unlockCode">
+       <property name="text">
+        <string>Unlock Code:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="2">
+      <widget class="QLabel" name="m_qLabel_portName_show">
+       <property name="text">
+        <string>COM****</string>
+       </property>
+      </widget>
+     </item>
+     <item row="13" column="0">
+      <widget class="QLabel" name="m_qLabel_deviceStatus">
+       <property name="text">
+        <string>Device Status:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="13" column="2" colspan="4">
+      <widget class="QLabel" name="m_qLabel_deviceStatus_show">
+       <property name="text">
+        <string>Device disconnected.</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
