@@ -68,7 +68,7 @@ SUBDIRS += \
 
 #Algorithms
 SUBDIRS += \
-    #dummytoolbox \
+    dummytoolbox \
     rtcmne \
     averaging \
     covariance \
@@ -78,3 +78,4 @@ SUBDIRS += \
     hpi \
     rtfwd \
     tmscontroller \
+    bandpower \

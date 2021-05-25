@@ -1,4 +1,4 @@
-//=============================================================================================================
+﻿//=============================================================================================================
 /**
  * @file     dummytoolbox.cpp
  * @author   Christoph Dinh <chdinh@nmr.mgh.harvard.edu>;
@@ -43,6 +43,7 @@
 //=============================================================================================================
 // QT INCLUDES
 //=============================================================================================================
+#include <iostream>
 
 //=============================================================================================================
 // EIGEN INCLUDES
@@ -174,6 +175,8 @@ void DummyToolbox::update(SCMEASLIB::Measurement::SPtr pMeasurement)
             initPluginControlWidgets();
         }
 
+        qDebug() << "======================================update";
+
         for(unsigned char i = 0; i < pRTMSA->getMultiArraySize(); ++i) {
             // Please note that we do not need a copy here since this function will block until
             // the buffer accepts new data again. Hence, the data is not deleted in the actual
@@ -209,16 +212,29 @@ void DummyToolbox::initPluginControlWidgets()
 void DummyToolbox::run()
 {
     MatrixXd matData;
+    MatrixXd mat(2, 3);
+    mat << 1, 2, 3, 4, 5, 6;
+    int i = 0;
 
     // Wait for Fiff Info
     while(!m_pFiffInfo) {
         msleep(10);
     }
 
+    qDebug() << "==========================================run";
+
     while(!isInterruptionRequested()) {
         // Get the current data
         if(m_pCircularBuffer->pop(matData)) {
             //ToDo: Implement your algorithm here
+
+            qDebug() << "[" << i << "] ===== mat.rows: " << mat.rows() << "mat.cols: " << mat.cols();
+            i += 1;
+            std::cout << mat << std::endl << std::endl;
+
+            if (i == 5) {
+                mat << 2, 3, 4, 5, 6, 7;
+            }
 
             //Send the data to the connected plugins and the online display
             //Unocmment this if you also uncommented the m_pOutput in the constructor above
