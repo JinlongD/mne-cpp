@@ -60,18 +60,18 @@ using namespace BANDPOWERPLUGIN;
 //=====================================================================================================================
 // DEFINE MEMBER METHODS
 //=====================================================================================================================
-BandpowerChannelSelectionView::BandpowerChannelSelectionView(const QString& sSettingsPath,
+BandpowerChannelSelectionView::BandpowerChannelSelectionView(const QStringList& sEEGChNames,
+                                                             const QStringList& sPickedChNames,
                                                              QWidget *parent)
     : QWidget(parent)
     , m_pUi(new Ui::BandpowerChannelSelectionView)
+    , m_sEEGChNames(sEEGChNames)
+    , m_sPickedChIndex(sPickedChNames)
 {
-    m_sSettingsPath = sSettingsPath;
     m_pUi->setupUi(this);
 
     this->setWindowTitle(QString("Channel selection"));
     this->setWindowFlags(windowFlags() | Qt::WindowStaysOnTopHint);
-
-    loadSettings();
 
     //m_pUi->m_qListWidget_AvailableChannels->installEventFilter(this);
     //m_pUi->m_qListWidget_SelectedChannels->installEventFilter(this);
@@ -103,8 +103,7 @@ BandpowerChannelSelectionView::BandpowerChannelSelectionView(const QString& sSet
 //=====================================================================================================================
 BandpowerChannelSelectionView::~BandpowerChannelSelectionView()
 {
-    saveSettings();
-    qDebug() << "[BandpowerChannelSelectionView::~BandpowerChannelSelectionView]: " << m_sPickedChIndex.size();
+    qDebug() << "[BandpowerChannelSelectionView::~BandpowerChannelSelectionView]: " << m_sPickedChIndex;
     delete m_pUi;
 }
 
@@ -123,7 +122,6 @@ void BandpowerChannelSelectionView::onPushButtonAddSelection()
         }
         m_pUi->m_qListWidget_SelectedChannels->sortItems(Qt::AscendingOrder);
         //emit sig_updatePickedChNames(m_sPickedChIndex);
-        saveSettings();
     }
 }
 
@@ -143,7 +141,6 @@ void BandpowerChannelSelectionView::onPushButtonRemoveSelection()
             m_pUi->m_qListWidget_AvailableChannels->item(sChIndex.toInt())->setCheckState(Qt::Unchecked);
         }
         //emit sig_updatePickedChNames(m_sPickedChIndex);
-        saveSettings();
     }
 }
 
@@ -159,7 +156,6 @@ void BandpowerChannelSelectionView::onPushButtonAddAll()
             m_pUi->m_qListWidget_AvailableChannels->item(i)->setCheckState(Qt::Checked);
         }
         //emit sig_updatePickedChNames(m_sPickedChIndex);
-        saveSettings();
     } else {
         qDebug() << "[BandpowerChannelSelectionView::onPushButtonAddAll()]: no available channels.";
     }
@@ -176,7 +172,6 @@ void BandpowerChannelSelectionView::onPushButtonClearAll()
         m_sPickedChIndex.clear();
 
         //emit sig_updatePickedChNames(m_sPickedChIndex);
-        saveSettings();
     }
 }
 
@@ -200,7 +195,6 @@ void BandpowerChannelSelectionView::onDoubleClickedAddItem(QListWidgetItem *clic
         m_pUi->m_qListWidget_SelectedChannels->sortItems(Qt::AscendingOrder);
 
         //emit sig_updatePickedChNames(m_sPickedChIndex);
-        saveSettings();
     }
 }
 
@@ -214,14 +208,11 @@ void BandpowerChannelSelectionView::onDoubleClickedRemoveItem(QListWidgetItem *c
     delete m_pUi->m_qListWidget_SelectedChannels->takeItem(iRow);
     m_pUi->m_qListWidget_AvailableChannels->item(sChIndex.toInt())->setCheckState(Qt::Unchecked);
     //emit sig_updatePickedChNames(m_sPickedChIndex);
-    saveSettings();
-
 }
 
 //=====================================================================================================================
 void BandpowerChannelSelectionView::closeEvent(QCloseEvent *pEvent)
 {
-    this->saveSettings();
     emit sig_updatePickedChNames(m_sPickedChIndex);
     pEvent->accept();
     //pEvent->ignore();
@@ -264,29 +255,4 @@ bool BandpowerChannelSelectionView::initPickedChannels()
         qDebug() << "[BandpowerChannelSelectionView::initPickedChannels]: no channels has been selected at present.";
         return false;
     }
-}
-
-//=====================================================================================================================
-void BandpowerChannelSelectionView::saveSettings()
-{
-    if(m_sSettingsPath.isEmpty()) {
-        return;
-    }
-
-    // Store Settings
-    QSettings settings("MNECPP");
-    settings.setValue(m_sSettingsPath + QString("/pickedChNames"), m_sPickedChIndex);
-}
-
-//=====================================================================================================================
-void BandpowerChannelSelectionView::loadSettings()
-{
-    if(m_sSettingsPath.isEmpty()) {
-        return;
-    }
-
-    // Load Settings
-    QSettings settings("MNECPP");
-    m_sPickedChIndex    = settings.value(m_sSettingsPath + QString("/pickedChNames"), {}).toStringList(); // init/default
-    m_sEEGChNames       = settings.value(m_sSettingsPath + QString("/eegChNames"), {}).toStringList(); // default empty.
 }

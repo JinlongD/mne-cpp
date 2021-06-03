@@ -64,9 +64,6 @@ BandpowerSetupWidget::BandpowerSetupWidget(Bandpower* pBandpower, QWidget *paren
 {
     //m_pUi = new Ui::BandpowerSetupWidget();
     m_pUi->setupUi(this);
-
-    //Always connect GUI elemts after m_pUi->setpUi has been called
-    //connect(m_pUi->m_qPushButton_About, SIGNAL(released()), this, SLOT(showAboutDialog()));
 }
 
 //=====================================================================================================================

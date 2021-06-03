@@ -74,11 +74,11 @@ BandpowerARSettingsView::BandpowerARSettingsView(const QString& sSettingsPath,
     //m_pUi->m_qSpinBox_AROrder->setMaximumWidth(100);
     m_pUi->m_qSpinBox_AROrder->setValue(m_iAROrder);
     connect(m_pUi->m_qSpinBox_AROrder, &QSpinBox::editingFinished,
-            this, &BandpowerARSettingsView::onChangeSpinBoxAROrder);
+            this, &BandpowerARSettingsView::onSpinBoxAROrder);
 
     m_pUi->m_qSpinBox_EvaluationPoints->setValue(m_iEvaluationPoints);
     connect(m_pUi->m_qSpinBox_EvaluationPoints, &QSpinBox::editingFinished,
-            this, &BandpowerARSettingsView::onChangeSpinBoxEvaluationPoints);
+            this, &BandpowerARSettingsView::onSpinBoxEvaluationPoints);
 
     m_pUi->m_qLabel_SamplingPoints->setDisabled(true);
     m_pUi->m_qSpinBox_SamplingPoints->setDisabled(true);
@@ -93,7 +93,7 @@ BandpowerARSettingsView::~BandpowerARSettingsView()
 }
 
 //=====================================================================================================================
-void BandpowerARSettingsView::onChangeSpinBoxAROrder()
+void BandpowerARSettingsView::onSpinBoxAROrder()
 {
     double value = m_pUi->m_qSpinBox_AROrder->value();
 
@@ -113,7 +113,7 @@ void BandpowerARSettingsView::onChangeSpinBoxAROrder()
 }
 
 //=====================================================================================================================
-void BandpowerARSettingsView::onChangeSpinBoxEvaluationPoints()
+void BandpowerARSettingsView::onSpinBoxEvaluationPoints()
 {
     double value = m_pUi->m_qSpinBox_EvaluationPoints->value();
 
@@ -149,6 +149,6 @@ void BandpowerARSettingsView::loadSettings()
 
     // Load Settings
     QSettings settings("MNECPP");
-    m_iAROrder          = settings.value(m_sSettingsPath + QString("/arOrder"), 1).toInt(); // init/default
+    m_iAROrder          = settings.value(m_sSettingsPath + QString("/arOrder"), 16).toInt(); // init/default
     m_iEvaluationPoints = settings.value(m_sSettingsPath + QString("/evaluationPoints"), 1).toInt();
 }

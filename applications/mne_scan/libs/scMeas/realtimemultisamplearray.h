@@ -1,4 +1,4 @@
-//=============================================================================================================
+﻿//=============================================================================================================
 /**
  * @file     realtimemultisamplearray.h
  * @author   Lorenz Esch <lesch@mgh.harvard.edu>;
@@ -207,6 +207,20 @@ public:
      */
     virtual void setValue(const Eigen::MatrixXd& mat);
 
+    //=========================================================================================================
+    /**
+     * @brief resetChannelNum   provides the possibility to change the channel number during runtime.
+     * @param [in] val          if true, number of channels is to be updated.
+     */
+    virtual void resetChannelNum(const bool& val);
+
+    //=========================================================================================================
+    /**
+     * @brief isChNumReset  returns whether channel number is to be reset.
+     * @return true whether the channel number is to be updated.
+     */
+    inline bool isChNumReset() const;
+
 private:
     mutable QMutex              m_qMutex;           /**< Mutex to ensure thread safety. */
 
@@ -217,6 +231,7 @@ private:
     qint32                      m_iMultiArraySize;  /**< Sample size of the multi sample array.*/
     QList<Eigen::MatrixXd>      m_matSamples;       /**< The multi sample array.*/
     bool                        m_bChInfoIsInit;    /**< If channel info is initialized.*/
+    bool                        m_bChNumIsReset;    /**< If channel number is to be reset.*/
 
     QList<RealTimeSampleArrayChInfo> m_qListChInfo; /**< Channel info list.*/
 };
@@ -321,6 +336,15 @@ inline const QList<Eigen::MatrixXd>& RealTimeMultiSampleArray::getMultiSampleArr
 {
     return m_matSamples;
 }
+
+//=============================================================================================================
+
+inline bool RealTimeMultiSampleArray::isChNumReset() const
+{
+    QMutexLocker locker(&m_qMutex);
+    return m_bChNumIsReset;
+}
+
 } // NAMESPACE
 
 Q_DECLARE_METATYPE(SCMEASLIB::RealTimeMultiSampleArray::SPtr)

@@ -1,4 +1,4 @@
-//=============================================================================================================
+﻿//=============================================================================================================
 /**
  * @file     dummysetupwidget.cpp
  * @author   Christoph Dinh <chdinh@nmr.mgh.harvard.edu>;
@@ -66,7 +66,7 @@ DummySetupWidget::DummySetupWidget(DummyToolbox* toolbox, QWidget *parent)
     m_pUi->setupUi(this);
 
     //Always connect GUI elemts after m_pUi->setpUi has been called
-    connect(m_pUi->m_qPushButton_About, SIGNAL(released()), this, SLOT(showAboutDialog()));
+    //connect(m_pUi->m_qPushButton_About, SIGNAL(released()), this, SLOT(showAboutDialog()));
 }
 
 //=============================================================================================================

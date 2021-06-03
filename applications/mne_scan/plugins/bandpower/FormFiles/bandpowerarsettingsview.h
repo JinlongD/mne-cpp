@@ -98,19 +98,19 @@ public:
     /**
      * @brief Slot called when m_qSpinBox_AROrder change.
      */
-    void onChangeSpinBoxAROrder();
+    void onSpinBoxAROrder();
 
     //=================================================================================================================
     /**
      * @brief Slot called when m_qSpinBox_EvaluationPoints change.
      */
-    void onChangeSpinBoxEvaluationPoints();
+    void onSpinBoxEvaluationPoints();
 
     //=================================================================================================================
     /**
      * @brief Slot called when m_qSpinBox_SamplingPoints change.
      */
-    void onChangeSpinBoxSamplingPoints();
+    void onSpinBoxSamplingPoints();
 
 private:
     //=================================================================================================================

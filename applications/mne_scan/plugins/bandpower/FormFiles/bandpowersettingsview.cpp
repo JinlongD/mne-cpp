@@ -66,63 +66,62 @@ using namespace BANDPOWERPLUGIN;
 // DEFINE MEMBER METHODS
 //=====================================================================================================================
 BandpowerSettingsView::BandpowerSettingsView(const QString& sSettingsPath,
+                                             const QStringList& sEEGChNames,
+                                             QStringList sPickedChNames,
+                                             const double& dSampFreq,
                                              QWidget *parent)
     : QWidget(parent)
     , m_pUi(new Ui::BandpowerSettingsView)
+    , m_dDataSampFreq(dSampFreq)
+    , m_sEEGChNames(sEEGChNames)
+    , m_sPickedChIndex(sPickedChNames)
 {
     m_sSettingsPath = sSettingsPath;
     m_pUi->setupUi(this);
 
     loadSettings();
 
+    m_iNumPickedChannels = m_sPickedChIndex.size();
+
     m_pUi->m_qDoubleSpinBox_MinFreq->setMinimum(1.0);
     m_pUi->m_qDoubleSpinBox_MinFreq->setMaximum(m_dDataSampFreq/2.0 - 1.0);
     m_pUi->m_qDoubleSpinBox_MaxFreq->setMinimum(2.0);
-    m_pUi->m_qDoubleSpinBox_MaxFreq->setMaximum(m_dDataSampFreq/2.0); // static_cast<int>(m_dDataSampFreq/2.0)
+    m_pUi->m_qDoubleSpinBox_MaxFreq->setMaximum(m_dDataSampFreq/2.0);
 
     m_dBinWidth = (m_dMaxFreq - m_dMinFreq) / (static_cast<double>(m_iNumBins));
     m_pUi->m_qLabel_binWidth->setText(QString("(Binwidth: %1 Hz.)").arg(m_dBinWidth));
-    //m_pUi->m_qSpinBox_nBins->setMinimum(1);
 
     m_pUi->m_qDoubleSpinBox_MinFreq->setValue(m_dMinFreq);
-    //connect(m_pUi->m_qDoubleSpinBox_MinFreq, &QDoubleSpinBox::editingFinished,
-    //        this, &BandpowerSettingsView::onChangeDoubleSpinBoxMinFreq);
     connect(m_pUi->m_qDoubleSpinBox_MinFreq, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
-            this, &BandpowerSettingsView::onChangeDoubleSpinBoxMinFreq);
+            this, &BandpowerSettingsView::onDoubleSpinBoxMinFreq);
 
     m_pUi->m_qDoubleSpinBox_MaxFreq->setValue(m_dMaxFreq);
     connect(m_pUi->m_qDoubleSpinBox_MaxFreq, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
-            this, &BandpowerSettingsView::onChangeDoubleSpinBoxMaxFreq);
+            this, &BandpowerSettingsView::onDoubleSpinBoxMaxFreq);
 
     m_pUi->m_qSpinBox_nBins->setValue(m_iNumBins);
-    //connect(m_pUi->m_qSpinBox_nBins, &QSpinBox::editingFinished,
-    //        this, &BandpowerSettingsView::onChangeSpinBoxNumBins);
     connect(m_pUi->m_qSpinBox_nBins, QOverload<int>::of(&QSpinBox::valueChanged),
-            this, &BandpowerSettingsView::onChangeSpinBoxNumBins);
+            this, &BandpowerSettingsView::onSpinBoxNumBins);
 
-    if (m_sPickedChIndex.isEmpty()) {
-        m_pUi->m_qLabel_nChannels_show->setText(QString("*1")); //* indicates default: picked 1st EEG channel.
-    } else {
-        m_pUi->m_qLabel_nChannels_show->setText(QString("%1").arg(m_iNumPickedChannels));
-    }
+    m_pUi->m_qLabel_nChannels_show->setText(QString("%1").arg(m_iNumPickedChannels));
     connect(m_pUi->m_qPushButton_PickChannels, &QPushButton::clicked,
-            this, &BandpowerSettingsView::onChangePushButtonSelectChannels);
+            this, &BandpowerSettingsView::onPushButtonSelectChannels);
 
     m_pUi->m_qDoubleSpinBox_SegmentLength->setValue(m_dSegmentLength);
     connect(m_pUi->m_qDoubleSpinBox_SegmentLength, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
-            this, &BandpowerSettingsView::onChangeDoubleSpinBoxSegmentLength);
+            this, &BandpowerSettingsView::onDoubleSpinBoxSegmentLength);
 
     m_pUi->m_qDoubleSpinBox_SegmentStep->setValue(m_dSegmentStep);
     connect(m_pUi->m_qDoubleSpinBox_SegmentStep, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
-            this, &BandpowerSettingsView::onChangeDoubleSpinBoxSegmentStep);
+            this, &BandpowerSettingsView::onDoubleSpinBoxSegmentStep);
 
     m_pUi->m_qComboBox_Method->setCurrentText(m_sSpectrumMethod);
     connect(m_pUi->m_qComboBox_Method, &QComboBox::currentTextChanged,
-            this, &BandpowerSettingsView::onChangeComboBoxSpectrumMethod);
+            this, &BandpowerSettingsView::onComboBoxSpectrumMethod);
 
     m_pUi->m_qComboBox_Detrend->setCurrentText(m_sDetrendMethod);
     connect(m_pUi->m_qComboBox_Detrend, &QComboBox::currentTextChanged,
-            this, &BandpowerSettingsView::onChangeComboBoxDetrendMethod);
+            this, &BandpowerSettingsView::onComboBoxDetrendMethod);
 }
 
 //=====================================================================================================================
@@ -133,10 +132,8 @@ BandpowerSettingsView::~BandpowerSettingsView()
 }
 
 //=============================================================================================================
-void BandpowerSettingsView::onChangeDoubleSpinBoxMinFreq(double currentValue)
+void BandpowerSettingsView::onDoubleSpinBoxMinFreq(double currentValue)
 {
-    //double currentValue = m_pUi->m_qDoubleSpinBox_MinFreq->value();
-
     if(currentValue >= m_dMaxFreq) {
         currentValue = m_dMaxFreq - 1;
         m_pUi->m_qDoubleSpinBox_MinFreq->setValue(currentValue);
@@ -161,10 +158,8 @@ void BandpowerSettingsView::onChangeDoubleSpinBoxMinFreq(double currentValue)
 }
 
 //=============================================================================================================
-void BandpowerSettingsView::onChangeDoubleSpinBoxMaxFreq(double currentValue)
+void BandpowerSettingsView::onDoubleSpinBoxMaxFreq(double currentValue)
 {
-    //double currentValue = m_pUi->m_qDoubleSpinBox_MaxFreq->value();
-
     if(currentValue <= m_dMinFreq) {
         currentValue = m_dMinFreq + 1;
         m_pUi->m_qDoubleSpinBox_MaxFreq->setValue(currentValue);
@@ -190,10 +185,8 @@ void BandpowerSettingsView::onChangeDoubleSpinBoxMaxFreq(double currentValue)
 }
 
 //=============================================================================================================
-void BandpowerSettingsView::onChangeSpinBoxNumBins(int currentValue)
+void BandpowerSettingsView::onSpinBoxNumBins(int currentValue)
 {
-    //int currentValue = m_pUi->m_qSpinBox_nBins->value();
-
     if(currentValue == m_iNumBins) {
         return;
     }
@@ -206,9 +199,8 @@ void BandpowerSettingsView::onChangeSpinBoxNumBins(int currentValue)
 }
 
 //=============================================================================================================
-void BandpowerSettingsView::onChangePushButtonSelectChannels()
+void BandpowerSettingsView::onPushButtonSelectChannels()
 {
-    //BandpowerChannelSelectionView *pChannelSelectionView = new BandpowerChannelSelectionView(m_sSettingsPath, this);
     if (m_sEEGChNames.isEmpty()) {
         qWarning() << "[BandpowerSettingsView:: onChangePushButtonSelectChannels]: "
                  << "No available EEG channels, please check the connection to the measurements.";
@@ -216,30 +208,31 @@ void BandpowerSettingsView::onChangePushButtonSelectChannels()
     }
 
     // init channel selection view
-    m_pChannelSelectionView = BandpowerChannelSelectionView::SPtr::create(m_sSettingsPath);
-    //BandpowerChannelSelectionView::SPtr pChannelSelectionView = new BandpowerChannelSelectionView::SPtr->create(m_sSettingsPath);
-    connect(m_pChannelSelectionView.data(), &BandpowerChannelSelectionView::sig_updatePickedChNames,
-            this, &BandpowerSettingsView::onChangePickedChannelNames);
+    if (!m_pChannelSelectionView) {
+        m_pChannelSelectionView = BandpowerChannelSelectionView::SPtr::create(m_sEEGChNames, m_sPickedChIndex);
+        //BandpowerChannelSelectionView::SPtr pChannelSelectionView = new BandpowerChannelSelectionView::SPtr->create(m_sSettingsPath);
+        connect(m_pChannelSelectionView.data(), &BandpowerChannelSelectionView::sig_updatePickedChNames,
+                this, &BandpowerSettingsView::onUpdatePickedChannelNames);
+    }
+
     m_pChannelSelectionView->show();
 }
 
 //=============================================================================================================
-void BandpowerSettingsView::onChangeDoubleSpinBoxSegmentLength(double currentValue)
+void BandpowerSettingsView::onDoubleSpinBoxSegmentLength(double currentValue)
 {
-    //int currentValue = m_pUi->m_qDoubleSpinBox_SegmentLength->value();
     if(currentValue == m_dSegmentLength)
         return;
 
     m_dSegmentLength = currentValue;
     saveSettings();
-    emit sig_updateSegmentLength(m_dSegmentLength);
+    int iSegmentLength = static_cast<int>(currentValue * m_dDataSampFreq / 1000); // convert to int type (number of sample points)
+    emit sig_updateSegmentLength(iSegmentLength);
 }
 
 //=============================================================================================================
-void BandpowerSettingsView::onChangeDoubleSpinBoxSegmentStep(double currentValue)
+void BandpowerSettingsView::onDoubleSpinBoxSegmentStep(double currentValue)
 {
-    //int currentValue = m_pUi->m_qDoubleSpinBox_SegmentStep->value();
-
     if(currentValue == m_dSegmentStep) {
         return;
     } else if (currentValue > m_dSegmentLength) {
@@ -250,11 +243,12 @@ void BandpowerSettingsView::onChangeDoubleSpinBoxSegmentStep(double currentValue
 
     m_dSegmentStep = currentValue;
     saveSettings();
-    emit sig_updateSegmentStep(m_dSegmentStep);
+    int iSegmentStep = static_cast<int>(currentValue * m_dDataSampFreq / 1000); // convert to int type (number of sample points)
+    emit sig_updateSegmentStep(iSegmentStep);
 }
 
 //=====================================================================================================================
-void BandpowerSettingsView::onChangeComboBoxSpectrumMethod(const QString &sSpectrumMethod)
+void BandpowerSettingsView::onComboBoxSpectrumMethod(const QString &sSpectrumMethod)
 {
     m_sSpectrumMethod = sSpectrumMethod;
     saveSettings();
@@ -262,7 +256,7 @@ void BandpowerSettingsView::onChangeComboBoxSpectrumMethod(const QString &sSpect
 }
 
 //=====================================================================================================================
-void BandpowerSettingsView::onChangeComboBoxDetrendMethod(const QString &sDetrendMethod)
+void BandpowerSettingsView::onComboBoxDetrendMethod(const QString &sDetrendMethod)
 {
     m_sDetrendMethod = sDetrendMethod;
     saveSettings();
@@ -270,7 +264,7 @@ void BandpowerSettingsView::onChangeComboBoxDetrendMethod(const QString &sDetren
 }
 
 //=====================================================================================================================
-void BandpowerSettingsView::onChangePickedChannelNames(QStringList sPickedChNames)
+void BandpowerSettingsView::onUpdatePickedChannelNames(QStringList sPickedChNames)
 {
     sPickedChNames.sort(Qt::CaseSensitive);
 
@@ -278,17 +272,17 @@ void BandpowerSettingsView::onChangePickedChannelNames(QStringList sPickedChName
         return;
     } else {
         if (!sPickedChNames.isEmpty()) {
-            m_iNumPickedChannels = sPickedChNames.size();
             m_sPickedChIndex = sPickedChNames;
-            //m_sPickedChIndex.sort(Qt::CaseSensitive);
+            m_sPickedChIndex.sort(Qt::CaseSensitive);
+            m_iNumPickedChannels = m_sPickedChIndex.size();
             m_pUi->m_qLabel_nChannels_show->setText(QString::number(m_iNumPickedChannels));
         } else {
-            m_iNumPickedChannels = 1;
-            //m_sPickedChIndex.clear();
-            m_sPickedChIndex = sPickedChNames;
-            m_pUi->m_qLabel_nChannels_show->setText(QString("*%1").arg(m_iNumPickedChannels));
+            m_sPickedChIndex.clear();
+            m_sPickedChIndex.append("0");
+            m_iNumPickedChannels = m_sPickedChIndex.size();
+            m_pUi->m_qLabel_nChannels_show->setText(QString::number(m_iNumPickedChannels));
             qWarning() << "[BandpowerSettingsView::onChangePickedChannelNames]: No channel is selected. "
-                       << "Picked channels are set to default: selected the first available EEG channel.";
+                       << "Picked channels are reset to default: selected the first available EEG channel.";
         }
         saveSettings();
         emit sig_updatePickedChannels(m_sPickedChIndex);
@@ -307,12 +301,10 @@ void BandpowerSettingsView::saveSettings()
     settings.setValue(m_sSettingsPath + QString("/minFreq"), m_dMinFreq);
     settings.setValue(m_sSettingsPath + QString("/maxFreq"), m_dMaxFreq);
     settings.setValue(m_sSettingsPath + QString("/numBins"), m_iNumBins);
-    settings.setValue(m_sSettingsPath + QString("/numPickedChannels"), m_iNumPickedChannels);
     settings.setValue(m_sSettingsPath + QString("/segmentLength"), m_dSegmentLength);
     settings.setValue(m_sSettingsPath + QString("/segmentStep"), m_dSegmentStep);
     settings.setValue(m_sSettingsPath + QString("/spectrumMethod"), m_sSpectrumMethod);
     settings.setValue(m_sSettingsPath + QString("/detrendMethod"), m_sDetrendMethod);
-    settings.setValue(m_sSettingsPath + QString("/pickedChNames"), m_sPickedChIndex);
 }
 
 //=====================================================================================================================
@@ -326,13 +318,8 @@ void BandpowerSettingsView::loadSettings()
     m_dMinFreq              = settings.value(m_sSettingsPath + QString("/minFreq"), 8.0).toDouble(); // default 8.0 Hz.
     m_dMaxFreq              = settings.value(m_sSettingsPath + QString("/maxFreq"), 30.0).toDouble(); // default 30.0 Hz.
     m_iNumBins              = settings.value(m_sSettingsPath + QString("/numBins"), 11).toInt(); // default 11 bins.
-    m_iNumPickedChannels    = settings.value(m_sSettingsPath + QString("/numPickedChannels"), 1).toInt(); // default 1 channel.
     m_dSegmentLength        = settings.value(m_sSettingsPath + QString("/segmentLength"), 400).toDouble(); // default 400 ms.
     m_dSegmentStep          = settings.value(m_sSettingsPath + QString("/segmentStep"), 50).toDouble(); // default 50 ms.
     m_sSpectrumMethod       = settings.value(m_sSettingsPath + QString("/spectrumMethod"), "AR").toString(); // default AR.
     m_sDetrendMethod        = settings.value(m_sSettingsPath + QString("/detrendMethod"), "None").toString(); // default no detrend.
-
-    m_dDataSampFreq         = settings.value(m_sSettingsPath + QString("/samplingFrequency"), 100.0).toDouble(); // default 100.0 Hz.
-    m_sEEGChNames           = settings.value(m_sSettingsPath + QString("/eegChNames"), {}).toStringList(); // default empty.
-    m_sPickedChIndex        = settings.value(m_sSettingsPath + QString("/pickedChNames"), {}).toStringList(); // default empty.
 }

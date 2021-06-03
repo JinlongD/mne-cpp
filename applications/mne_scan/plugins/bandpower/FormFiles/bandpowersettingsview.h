@@ -89,6 +89,9 @@ public:
      * @param [in] parent
      */
     explicit BandpowerSettingsView(const QString& sSettingsPath = "",
+                                   const QStringList& sEEGChNames = {},
+                                   QStringList sPickedChNames = {"0"},
+                                   const double& dSampFreq = 100.0,
                                    QWidget *parent = 0);
 
     //=================================================================================================================
@@ -102,62 +105,62 @@ public:
      * @brief Slot called when m_qDoubleSpinBox_MinFreq change.
      * @param currentValue
      */
-    void onChangeDoubleSpinBoxMinFreq(double currentValue);
+    void onDoubleSpinBoxMinFreq(double currentValue);
 
     //=========================================================================================================
     /**
      * @brief Slot called when m_qDoubleSpinBox_MaxFreq change.
      * @param currentValue
      */
-    void onChangeDoubleSpinBoxMaxFreq(double currentValue);
+    void onDoubleSpinBoxMaxFreq(double currentValue);
 
     //=========================================================================================================
     /**
      * @brief Slot called when m_qSpinBox_NumBins change.
      * @param currentValue
      */
-    void onChangeSpinBoxNumBins(int currentValue);
+    void onSpinBoxNumBins(int currentValue);
 
     //=========================================================================================================
     /**
      * @brief Slot called when m_qPushButton_SelectChannels change.
      */
-    void onChangePushButtonSelectChannels();
+    void onPushButtonSelectChannels();
 
     //=========================================================================================================
     /**
      * @brief Slot called when m_qDoubleSpinBox_SegmentLength change.
      * @param currentValue
      */
-    void onChangeDoubleSpinBoxSegmentLength(double currentValue);
+    void onDoubleSpinBoxSegmentLength(double currentValue);
 
     //=========================================================================================================
     /**
      * @brief Slot called when m_qDoubleSpinBox_SegmentStep change.
      * @param currentValue
      */
-    void onChangeDoubleSpinBoxSegmentStep(double currentValue);
+    void onDoubleSpinBoxSegmentStep(double currentValue);
 
     //=========================================================================================================
     /**
      * @brief Slot called when m_qComboBox_SpectrumMethod change.
      * @param sSpectrumMethod
      */
-    void onChangeComboBoxSpectrumMethod(const QString &sSpectrumMethod);
+    void onComboBoxSpectrumMethod(const QString &sSpectrumMethod);
 
     //=========================================================================================================
     /**
      * @brief Slot called when m_qComboBox_DetrendMethod change.
      * @param sDetrendMethod
      */
-    void onChangeComboBoxDetrendMethod(const QString &sDetrendMethod);
+    void onComboBoxDetrendMethod(const QString &sDetrendMethod);
 
     //=================================================================================================================
     /**
      * @brief slot called when picked channels change.
      * @param sPickedChNames
      */
-    void onChangePickedChannelNames(QStringList sPickedChNames);
+    void onUpdatePickedChannelNames(QStringList sPickedChNames);
 
 private:
     //=================================================================================================================
@@ -176,6 +179,10 @@ private:
     QString                     m_sSettingsPath;    /**< The settings path to store the GUI settings to. */
     Ui::BandpowerSettingsView*  m_pUi;              /**< The UI class specified in the designer. */
 
+    double      m_dDataSampFreq;
+    QStringList m_sEEGChNames;
+    QStringList m_sPickedChIndex;
+
     double      m_dBinWidth;
     double      m_dMaxFreq;
     double      m_dMinFreq;
@@ -185,10 +192,6 @@ private:
     int         m_iNumPickedChannels;
     QString     m_sSpectrumMethod;
     QString     m_sDetrendMethod;
-    QStringList m_sPickedChIndex;
-
-    double      m_dDataSampFreq;
-    QStringList m_sEEGChNames;
 
     //BandpowerChannelSelectionView *m_pChannelSelectionView;
     QSharedPointer<BandpowerChannelSelectionView> m_pChannelSelectionView;
@@ -202,10 +205,10 @@ signals:
     void sig_initBandpowerSettings(const QString& sSettingsPath);
     void sig_updateMinFreq(double minFreq);
     void sig_updateMaxFreq(double maxFreq);
-    void sig_updatePickedChannels(const QStringList& sPickedChIndex);
+    void sig_updatePickedChannels(QStringList sPickedChIndex);
     void sig_updateNumBins(int value);
-    void sig_updateSegmentLength(double value);
-    void sig_updateSegmentStep(double value);
+    void sig_updateSegmentLength(int value);
+    void sig_updateSegmentStep(int value);
     void sig_updateSpectrumMethod(const QString& sSpectrumMethod);
     void sig_updateDetrendMethod(const QString& sDetrendMethod);
 };

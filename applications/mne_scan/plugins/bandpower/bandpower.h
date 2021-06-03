@@ -78,6 +78,8 @@ namespace BANDPOWERPLUGIN
 //=====================================================================================================================
 // BANDPOWERPLUGIN FORWARD DECLARATIONS
 //=====================================================================================================================
+//class BandpowerSettingsView;
+//class BandpowerARSettingsView;
 
 //=====================================================================================================================
 /**
@@ -120,80 +122,80 @@ public:
 
     //=================================================================================================================
     /**
-     * @brief Udates the pugin with new (incoming) data.
+     * @brief Upates the pugin with new (incoming) data.
      * @param [in] pMeasurement     The incoming data in form of a generalized Measurement.
      */
     void update(SCMEASLIB::Measurement::SPtr pMeasurement);
 
     //=================================================================================================================
     /**
-     * @brief Changes the bottom frequency of the power spectrum.
+     * @brief updates the bottom frequency of the power spectrum.
      * @param [in] dMinFreq         Desired bottom frequency.
      */
-    void onChangeBandpowerMinFreq(double dMinFreq);
+    void onUpdateBandpowerMinFreq(double dMinFreq);
 
     //=================================================================================================================
     /**
-     * @brief Changes the top frequency of the power spectrum.
+     * @brief updates the top frequency of the power spectrum.
      * @param [in] dMaxFreq         Desired top frequency.
      */
-    void onChangeBandpowerMaxFreq(double dMaxFreq);
+    void onUpdateBandpowerMaxFreq(double dMaxFreq);
 
     //=================================================================================================================
     /**
-     * @brief Changes the number of bins in which bandpower is calculated for each channel.
+     * @brief updates the number of bins in which bandpower is calculated for each channel.
      * @param [in] iNumBins         Number of bins.
      */
-    void onChangeBandpowerNumBins(int iNumBins);
+    void onUpdateBandpowerNumBins(int iNumBins);
 
     //=================================================================================================================
     /**
-     * @brief Changes the number of channels for which bandpower is analyzed.
+     * @brief updates the number of channels for which bandpower is analyzed.
      * @param [in] iNumChannels     Number of channels.
      */
-    void onChangeBandpowerPickedChannels(QStringList sPickedChIndex);
+    void onUpdateBandpowerPickedChannels(QStringList sPickedChIndex);
 
     //=================================================================================================================
     /**
-     * @brief changes the segment length of the data block for which bandpower is analyzed.
-     * @param [in] iSegmentLength   segment length of the data block in [ms].
+     * @brief updates the segment length of the data block for which bandpower is analyzed.
+     * @param [in] iSegmentLength   segment length of the data block (number of samples in each segment).
      */
-    void onChangeBandpowerSegmentLength(double dSegmentLength);
+    void onUpdateBandpowerSegmentLength(int iSegmentLength);
 
     //=================================================================================================================
     /**
-     * @brief changes the segment updating step of the data block.
-     * @param [in] iSegmentStep     update step of the data block in [ms].
+     * @brief updates the segment updating step of the data block.
+     * @param [in] iSegmentStep     update step of the data block (number of samples).
      */
-    void onChangeBandpowerSegmentStep(double dSegmentStep);
+    void onUpdateBandpowerSegmentStep(int iSegmentStep);
 
     //=================================================================================================================
     /**
-     * @brief Changes the method to calculate the power spectrum.
+     * @brief updates the method to calculate the power spectrum.
      * @param [in] sSpectrumMethod  spectrum method.
      */
-    void onChangeBandpowerSpectrumMethod(const QString &sSpectrumMethod);
+    void onUpdateBandpowerSpectrumMethod(const QString &sSpectrumMethod);
 
     //=================================================================================================================
     /**
-     * @brief Changes the detrend method for the data.
+     * @brief updates the detrend method for the data.
      * @param [in] sDetrendMethod   Detrend method (0: none, 1: remove mean, 2: remove linear trend).
      */
-    void onChangeBandpowerDetrendMethod(const QString &sDetrendMethod);
+    void onUpdateBandpowerDetrendMethod(const QString &sDetrendMethod);
 
     //=================================================================================================================
     /**
-     * @brief Changes the order of the AR for spectrum estimation.
+     * @brief updates the order of the AR for spectrum estimation.
      * @param [in] arOrder          Order of the AR method.
      */
-    void onChangeBandpowerAROrder(int arOrder);
+    void onUpdateBandpowerAROrder(int arOrder);
 
     //=================================================================================================================
     /**
-     * @brief Changes the number of evaluatin points for the AR for spectrum estimation.
+     * @brief updates the number of evaluatin points for the AR for spectrum estimation.
      * @param [in] iAREvaluationPoints      Number of AR evaluation points.
      */
-    void onChangeBandpowerAREvaluationPoints(int iAREvaluationPoints);
+    void onUpdateBandpowerAREvaluationPoints(int iAREvaluationPoints);
 
 protected:
     //=================================================================================================================
@@ -207,12 +209,6 @@ protected:
      * @brief AbstractAlgorithm function
      */
     virtual void run();
-
-    //=================================================================================================================
-    /**
-     * @brief initSegment
-     */
-    void initSegment();
 
 private:
     FIFFLIB::FiffInfo::SPtr     m_pFiffInfoInput;     /**< Input fiff measurement info.*/
@@ -232,8 +228,8 @@ private:
     //bool        m_bStartComputation;        // current state of the bandpower computation.
     double      m_dMaxFreq;                 // maximum value of the frequency band. (in Hz).
     double      m_dMinFreq;                 // minimum value of the frequency band. (in Hz).
-    double      m_dSegmentLength;           // width of the EEG raw data segment to calculate band powers. (in ms).
-    double      m_dSegmentStep;             // segment moving/updating step. (in ms).
+    int         m_iSegmentLength;           // width of the EEG raw data segment to calculate band powers. (sample number of segment).
+    int         m_iSegmentStep;             // segment moving/updating step. (sample number).
     int         m_iNumBins;                 // number of frequency bins: (m_dMaxFreq - m_dMinFreq)/m_dBinWidth.
     int         m_iNumPickedChannels;       // number of picked EEG channels to calculate band powers.
     QString     m_sDetrendMethod;           // detrend method.
@@ -244,22 +240,23 @@ private:
     int         m_iAREvaluationPoints;      // value of ar evaluation points.
 
     // parameters for bandpower
-    bool        m_bBandpowerOutputInit;
-    bool        m_bNumPickedChUpdated;
-    bool        m_bNumBinsUpdated;
-    bool        m_bSegmentInit;
+    bool        m_bBandpowerChNumReset;     // if bandpower channel number is to be reset, effected by pickedChannels and Bin number.
+    bool        m_bBandpowerSegmentReset;   // if bandpower data block is to be reset, effected by segment length and its update step.
     double      m_dBinWidth;                // bin width. (in Hz): (m_dMaxFreq - m_dMinFreq)/m_iNumBins.
     double      m_dDataSampFreq;            // sampling frequency of the original EEG raw data.(in Hz).
     int         m_iDataBufferSize;          // buffer/sample size of the origin input data.
     int         m_iDataNumChannels;         // number of channels of the original input data.
-    int         m_iEEGNumChannels;          // number of EEG channels from the original input data.
+    int         m_iDataNumEEGChs;           // number of EEG channels from the original input data.
     int         m_iBandpowerNumChannels;    // number of computed bandpower channels: m_iSelectedNumChannels*m_iNumBins.
 
     QString     m_sSettingsPath;            // settings path string for load/save parameters.
-    QStringList m_sEEGChNames;              // names of EEG channels of the original input data.
-    QStringList m_sPickedChNames;           // names of picked EEG channels.
-    //QStringList m_sPickedChIndex;           // index list of picked EEG channels to calculate bandpowers.
+    QStringList m_sDataEEGChNames;          // names of EEG channels of the original input data.
+    QStringList m_sPickedChNames;           // names of picked EEG channels, provided by the indices in m_sDataEEGChNames.
     Eigen::RowVectorXi m_vecEEGChPicks;     // index vector of EEG channels.
+
+    // settings view
+    //BandpowerSettingsView       *m_pBandpowerSettingsView;
+    //BandpowerARSettingsView     *m_pBandpowerARSettingsView;
 
     // channel selection view
     //QSharedPointer<DISPLIB::ChannelSelectionView>   m_pChannelSelectionView;    /**< ChannelSelectionView. */
@@ -271,6 +268,13 @@ signals:
      * @brief Emitted when fiffInfo is available
      */
     void fiffInfoAvailable();
+
+    //=================================================================================================================
+    /**
+     * @brief sig_resetRTMSAChNum   emitted when one is to reset rtmsa channel number.
+     * @param val
+     */
+    void sig_resetRTMSAChNum(const bool val);
 };
 } // NAMESPACE
 

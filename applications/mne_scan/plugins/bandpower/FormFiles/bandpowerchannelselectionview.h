@@ -89,8 +89,8 @@ public:
      * @param [in] sSettingsPath
      * @param [in] parent
      */
-    explicit BandpowerChannelSelectionView(const QString &sSettingsPath = "",
-                                           //const QStringList &sEEGChNames = {}, // transfer params by QSettings.
+    explicit BandpowerChannelSelectionView(const QStringList &sEEGChNames = {}, // transfer params by QSettings.
+                                           const QStringList &sPickedChNames = {},
                                            QWidget *parent = nullptr);
 
     //=================================================================================================================
@@ -163,23 +163,10 @@ private:
 
     //=================================================================================================================
     /**
-     * @brief Saves all important settings of this view via QSettings.
-     */
-    void saveSettings();
-
-    //=================================================================================================================
-    /**
-     * @brief Loads and inits all important settings of this view via QSettings.
-     */
-    void loadSettings();
-
-    //=================================================================================================================
-    /**
      * @brief initAvailableChannels
      * @param sEEGChNames
      * @return
      */
-    //bool initAvailableChannels(QStringList sEEGChNames);
     bool initAvailableChannels();
 
     //=================================================================================================================
@@ -191,11 +178,10 @@ private:
     bool initPickedChannels();
 
 private:
-    QString     m_sSettingsPath;    /**< The settings path to store the GUI settings to. */
     Ui::BandpowerChannelSelectionView *m_pUi;   /**< The UI class specified in the designer. */
 
-    QStringList m_sPickedChIndex;
     QStringList m_sEEGChNames;
+    QStringList m_sPickedChIndex;
     QMap<QString, QString> m_mapNameToIndex;
 
 signals:
