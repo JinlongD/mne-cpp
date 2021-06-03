@@ -1,4 +1,4 @@
-//=============================================================================================================
+﻿//=============================================================================================================
 /**
  * @file     realtimemultisamplearraywidget.cpp
  * @author   Lars Debor <Lars.Debor@tu-ilmenau.de>;
@@ -84,8 +84,8 @@ using namespace RTPROCESSINGLIB;
 
 RealTimeMultiSampleArrayWidget::RealTimeMultiSampleArrayWidget(QSharedPointer<QTime> &pTime,
                                                                QWidget* parent)
-: MeasurementWidget(parent)
-, m_iMaxFilterTapSize(-1)
+    : MeasurementWidget(parent)
+    , m_iMaxFilterTapSize(-1)
 {
     Q_UNUSED(pTime)
 
@@ -120,6 +120,21 @@ void RealTimeMultiSampleArrayWidget::update(SCMEASLIB::Measurement::SPtr pMeasur
                 initDisplayControllWidgets();
             }
         }
+
+        // added "m_pRTMSA->isChNumReset()" to provide the possibility to reset channel number during runtime.
+        if (m_pRTMSA->isChNumReset()) {
+            m_pFiffInfo = m_pRTMSA->info();
+            m_iMaxFilterTapSize = m_pRTMSA->getMultiSampleArray().first().cols();
+            //initDisplayControllWidgets();
+            m_pChannelDataView->hide();
+            m_pChannelDataView->init(m_pFiffInfo);
+            m_pChannelDataView->updateOpenGLViewport();
+            m_pChannelInfoModel->setFiffInfo(m_pFiffInfo);
+            //m_pChannelSelectionView->newFiffFileLoaded(m_pFiffInfo);
+            m_pChannelDataView->show();
+            m_pRTMSA->resetChannelNum(false);
+        }
+
         if (!m_pRTMSA->getMultiSampleArray().isEmpty()) {
             //Add data to table view
             m_pChannelDataView->addData(m_pRTMSA->getMultiSampleArray());
@@ -127,11 +142,9 @@ void RealTimeMultiSampleArrayWidget::update(SCMEASLIB::Measurement::SPtr pMeasur
     }
 }
 
-//=============================================================================================================
-
 void RealTimeMultiSampleArrayWidget::initDisplayControllWidgets()
 {
-    if(m_pFiffInfo) {        
+    if(m_pFiffInfo) {
         //Create table view and set layout
         m_pChannelDataView = new RtFiffRawView(QString("MNESCAN/RTMSAW"),
                                                this);
@@ -201,56 +214,56 @@ void RealTimeMultiSampleArrayWidget::initDisplayControllWidgets()
         //Init control widgets
         QList<QWidget*> lControlWidgets;
 
-//        // Quick control projectors
-//        ProjectorsView* pProjectorsView = new ProjectorsView(QString("MNESCAN/RTMSAW"));
-//        pProjectorsView->setObjectName("group_tab_Noise_SSP");
-//        lControlWidgets.append(pProjectorsView);
+        //        // Quick control projectors
+        //        ProjectorsView* pProjectorsView = new ProjectorsView(QString("MNESCAN/RTMSAW"));
+        //        pProjectorsView->setObjectName("group_tab_Noise_SSP");
+        //        lControlWidgets.append(pProjectorsView);
 
-//        connect(pProjectorsView, &ProjectorsView::projSelectionChanged,
-//                m_pChannelDataView.data(), &RtFiffRawView::updateProjection);
+        //        connect(pProjectorsView, &ProjectorsView::projSelectionChanged,
+        //                m_pChannelDataView.data(), &RtFiffRawView::updateProjection);
 
-//        pProjectorsView->setProjectors(m_pFiffInfo->projs);
+        //        pProjectorsView->setProjectors(m_pFiffInfo->projs);
 
-//        // Quick control compensators
-//        CompensatorView* pCompensatorView = new CompensatorView(QString("MNESCAN/RTMSAW"));
-//        pCompensatorView->setObjectName("group_tab_Noise_Comp");
-//        lControlWidgets.append(pCompensatorView);
+        //        // Quick control compensators
+        //        CompensatorView* pCompensatorView = new CompensatorView(QString("MNESCAN/RTMSAW"));
+        //        pCompensatorView->setObjectName("group_tab_Noise_Comp");
+        //        lControlWidgets.append(pCompensatorView);
 
-//        connect(pCompensatorView, &CompensatorView::compSelectionChanged,
-//                m_pChannelDataView.data(), &RtFiffRawView::updateCompensator);
+        //        connect(pCompensatorView, &CompensatorView::compSelectionChanged,
+        //                m_pChannelDataView.data(), &RtFiffRawView::updateCompensator);
 
-//        pCompensatorView->setCompensators(m_pFiffInfo->comps);
+        //        pCompensatorView->setCompensators(m_pFiffInfo->comps);
 
-//        // Quick control filter
-//        FilterSettingsView* pFilterSettingsView = new FilterSettingsView(QString("MNESCAN/RTMSAW"));
-//        pFilterSettingsView->setObjectName("group_tab_Noise_Filter");
-//        lControlWidgets.append(pFilterSettingsView);
+        //        // Quick control filter
+        //        FilterSettingsView* pFilterSettingsView = new FilterSettingsView(QString("MNESCAN/RTMSAW"));
+        //        pFilterSettingsView->setObjectName("group_tab_Noise_Filter");
+        //        lControlWidgets.append(pFilterSettingsView);
 
-//        connect(pFilterSettingsView->getFilterView().data(), &FilterDesignView::filterChannelTypeChanged,
-//                m_pChannelDataView.data(), &RtFiffRawView::setFilterChannelType);
+        //        connect(pFilterSettingsView->getFilterView().data(), &FilterDesignView::filterChannelTypeChanged,
+        //                m_pChannelDataView.data(), &RtFiffRawView::setFilterChannelType);
 
-//        connect(pFilterSettingsView->getFilterView().data(), &FilterDesignView::filterChanged,
-//                m_pChannelDataView.data(), &RtFiffRawView::setFilter);
+        //        connect(pFilterSettingsView->getFilterView().data(), &FilterDesignView::filterChanged,
+        //                m_pChannelDataView.data(), &RtFiffRawView::setFilter);
 
-//        connect(pFilterSettingsView, &FilterSettingsView::filterActivationChanged,
-//                m_pChannelDataView.data(), &RtFiffRawView::setFilterActive);
+        //        connect(pFilterSettingsView, &FilterSettingsView::filterActivationChanged,
+        //                m_pChannelDataView.data(), &RtFiffRawView::setFilterActive);
 
-//        m_pChannelDataView->setFilterActive(pFilterSettingsView->getFilterActive());
-//        m_pChannelDataView->setFilterChannelType(pFilterSettingsView->getFilterView()->getChannelType());
-//        pFilterSettingsView->getFilterView()->setWindowSize(m_iMaxFilterTapSize);
-//        pFilterSettingsView->getFilterView()->setMaxAllowedFilterTaps(m_iMaxFilterTapSize);
-//        pFilterSettingsView->getFilterView()->init(m_pFiffInfo->sfreq);
+        //        m_pChannelDataView->setFilterActive(pFilterSettingsView->getFilterActive());
+        //        m_pChannelDataView->setFilterChannelType(pFilterSettingsView->getFilterView()->getChannelType());
+        //        pFilterSettingsView->getFilterView()->setWindowSize(m_iMaxFilterTapSize);
+        //        pFilterSettingsView->getFilterView()->setMaxAllowedFilterTaps(m_iMaxFilterTapSize);
+        //        pFilterSettingsView->getFilterView()->init(m_pFiffInfo->sfreq);
 
-//        // Quick control SPHARA settings
-//        SpharaSettingsView* pSpharaSettingsView = new SpharaSettingsView();
-//        pSpharaSettingsView->setObjectName("group_tab_Noise_SPHARA");
-//        lControlWidgets.append(pSpharaSettingsView);
+        //        // Quick control SPHARA settings
+        //        SpharaSettingsView* pSpharaSettingsView = new SpharaSettingsView();
+        //        pSpharaSettingsView->setObjectName("group_tab_Noise_SPHARA");
+        //        lControlWidgets.append(pSpharaSettingsView);
 
-//        connect(pSpharaSettingsView, &SpharaSettingsView::spharaActivationChanged,
-//                m_pChannelDataView.data(), &RtFiffRawView::updateSpharaActivation);
+        //        connect(pSpharaSettingsView, &SpharaSettingsView::spharaActivationChanged,
+        //                m_pChannelDataView.data(), &RtFiffRawView::updateSpharaActivation);
 
-//        connect(pSpharaSettingsView, &SpharaSettingsView::spharaOptionsChanged,
-//                m_pChannelDataView.data(), &RtFiffRawView::updateSpharaOptions);
+        //        connect(pSpharaSettingsView, &SpharaSettingsView::spharaOptionsChanged,
+        //                m_pChannelDataView.data(), &RtFiffRawView::updateSpharaOptions);
 
         // Quick control scaling
         ScalingView* pScalingView = new ScalingView(QString("MNESCAN/RTMSAW"), 0, Qt::Widget, m_pFiffInfo->get_channel_types());

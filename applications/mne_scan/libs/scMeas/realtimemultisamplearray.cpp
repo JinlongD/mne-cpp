@@ -1,4 +1,4 @@
-//=============================================================================================================
+﻿//=============================================================================================================
 /**
  * @file     realtimemultisamplearray.cpp
  * @author   Lorenz Esch <lesch@mgh.harvard.edu>;
@@ -64,6 +64,7 @@ RealTimeMultiSampleArray::RealTimeMultiSampleArray(QObject *parent)
 , m_fSamplingRate(0)
 , m_iMultiArraySize(10)
 , m_bChInfoIsInit(false)
+, m_bChNumIsReset(false) //
 {
 }
 
@@ -258,3 +259,11 @@ void RealTimeMultiSampleArray::setValue(const MatrixXd& mat)
     }
 }
 
+//=============================================================================================================
+
+void RealTimeMultiSampleArray::resetChannelNum(bool val)
+{
+    m_qMutex.lock();
+    m_bChNumIsReset = val;
+    m_qMutex.unlock();
+}

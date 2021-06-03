@@ -1,4 +1,4 @@
-//=============================================================================================================
+﻿//=============================================================================================================
 /**
  * @file     dummyyourwidget.cpp
  * @author   Christoph Dinh <chdinh@nmr.mgh.harvard.edu>;
@@ -70,6 +70,11 @@ DummyYourWidget::DummyYourWidget(const QString& sSettingsPath,
     m_pUi->setupUi(this);
 
     loadSettings();
+
+    connect(m_pUi->m_qPushButton_AddOne, &QPushButton::clicked,
+            this, &DummyYourWidget::onPushButtonAddOne);
+    connect(m_pUi->m_qPushButton_DeleteOne, &QPushButton::clicked,
+            this, &DummyYourWidget::onPushButtonDeleteOne);
 }
 
 //=============================================================================================================
@@ -79,6 +84,20 @@ DummyYourWidget::~DummyYourWidget()
     saveSettings();
 
     delete m_pUi;
+}
+
+//=============================================================================================================
+
+void DummyYourWidget::onPushButtonAddOne()
+{
+    emit sig_addOneChannel();
+}
+
+//=============================================================================================================
+
+void DummyYourWidget::onPushButtonDeleteOne()
+{
+    emit sig_deleteOneChannel();
 }
 
 //=============================================================================================================

@@ -1,4 +1,4 @@
-//=============================================================================================================
+﻿//=============================================================================================================
 /**
  * @file     dummyyourwidget.h
  * @author   Christoph Dinh <chdinh@nmr.mgh.harvard.edu>;
@@ -97,6 +97,13 @@ public:
      */
     ~DummyYourWidget();
 
+    //=========================================================================================================
+    /**
+     * @brief slots called when pushbuttons are clicked.
+     */
+    void onPushButtonAddOne();
+    void onPushButtonDeleteOne();
+
 private:
     //=========================================================================================================
     /**
@@ -112,6 +119,10 @@ private:
 
     Ui::DummyYourWidgetGui*     m_pUi;              /**< The UI class specified in the designer. */
     QString                     m_sSettingsPath;    /**< The settings path to store the GUI settings to. */
+
+signals:
+    void sig_addOneChannel();
+    void sig_deleteOneChannel();
 
 };
 }   //namespace

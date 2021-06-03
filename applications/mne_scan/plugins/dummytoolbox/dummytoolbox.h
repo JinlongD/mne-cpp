@@ -1,4 +1,4 @@
-//=============================================================================================================
+﻿//=============================================================================================================
 /**
  * @file     dummytoolbox.h
  * @author   Christoph Dinh <chdinh@nmr.mgh.harvard.edu>;
@@ -124,6 +124,10 @@ public:
      */
     void update(SCMEASLIB::Measurement::SPtr pMeasurement);
 
+    //=========================================================================================================
+    void onAddOneChannel();
+    void onDeleteOneChannel();
+
 protected:
     //=========================================================================================================
     /**
@@ -139,6 +143,7 @@ protected:
 
 private:
     FIFFLIB::FiffInfo::SPtr                         m_pFiffInfo;                /**< Fiff measurement info.*/
+    FIFFLIB::FiffInfo::SPtr                         m_pFiffInfoOutput;          /**< Fiff measurement info.*/
 
     QSharedPointer<DummyYourWidget>                 m_pYourWidget;              /**< The widget used to control this plugin by the user.*/
 
@@ -147,12 +152,21 @@ private:
     SCSHAREDLIB::PluginInputData<SCMEASLIB::RealTimeMultiSampleArray>::SPtr      m_pInput;      /**< The incoming data.*/
     SCSHAREDLIB::PluginOutputData<SCMEASLIB::RealTimeMultiSampleArray>::SPtr     m_pOutput;     /**< The outgoing data.*/
 
+    QMutex m_qMutex;
+    bool                m_bChNumReset;
+    int                 m_iDataBufferSize;
+    int                 m_iNumPickedCh;
+    Eigen::RowVectorXi  m_vecEEGChPicks;     // index vector of EEG channels.
+    QStringList         m_sEEGChNames;
+    QStringList         m_sPickedChNames;
+
 signals:
     //=========================================================================================================
     /**
      * Emitted when fiffInfo is available
      */
     void fiffInfoAvailable();
+    void sig_resetChNum(const bool val);
 };
 } // NAMESPACE
 
