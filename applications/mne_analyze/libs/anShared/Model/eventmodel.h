@@ -323,7 +323,7 @@ public:
      *
      * @return Returns a matrix of formatted event data.
      */
-    MatrixXi getEventMatrix(int iGroup = 9999);
+    MatrixXi getEventMatrix();
 
     //=========================================================================================================
     /**
@@ -491,6 +491,20 @@ public:
      */
     std::vector<uint> getEventSelection() const;
 
+    //=========================================================================================================
+    /**
+     * Updates selection based on input list
+     *
+     * @param[in] indexList     List of selected indeces.
+     */
+    void updateSelectedGroups(const QList<QModelIndex>& indexList);
+
+    //=========================================================================================================
+    /**
+     * Gets new events from trigger channels
+     */
+    void getEventsFromNewData();
+
 signals:
 
     //=========================================================================================================
@@ -543,6 +557,8 @@ private:
     QSharedPointer<FiffRawViewModel>    m_pFiffModel;                   /**< Pointer to FiffRawViewModel associated with the events stored in this model. */
 
     EVENTSLIB::EventManager             m_EventManager;                 /**< Database of of events. */
+
+    const static double                 m_dThreshold;
 };
 
 //=============================================================================================================

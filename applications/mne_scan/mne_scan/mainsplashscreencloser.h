@@ -1,13 +1,13 @@
 //=============================================================================================================
 /**
- * @file     ftbuffersetupwidget.cpp
- * @author   Gabriel B Motta <gbmotta@mgh.harvard.edu>
- * @since    0.1.0
- * @date     January, 2020
+ * @file     mainsplashscreencloser.h
+ * @author   Juan GPC <jgarciaprieto@mgh.harvard.edu>
+ * @since    0.1.9
+ * @date     May, 2021
  *
  * @section  LICENSE
  *
- * Copyright (C) 2020, Gabriel B Motta. All rights reserved.
+ * Copyright (C) 2021, Juan Garcia-Prieto. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification, are permitted provided that
  * the following conditions are met:
@@ -28,118 +28,84 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  *
- * @brief    Definition of the FtBufferSetupWidget class.
+ * @brief    Class responsible for closing the splash screen.
  *
  */
+
+#ifndef MAINSPLASHSCREENCLOSER_H
+#define MAINSPLASHSCREENCLOSER_H
 
 //=============================================================================================================
 // INCLUDES
 //=============================================================================================================
 
-#include "ftbuffersetupwidget.h"
-#include "ui_ftbuffersetup.h"
+//=============================================================================================================
+// QT INCLUDES
+//=============================================================================================================
+
+#include <QThread>
+#include <QWeakPointer>
 
 //=============================================================================================================
 // QT INCLUDES
 //=============================================================================================================
 
-#include <QDebug>
+#include "mainsplashscreen.h"
 
 //=============================================================================================================
-// USED NAMESPACES
+// FORWARD DECLARATIONS
 //=============================================================================================================
 
-using namespace FTBUFFERPLUGIN;
 
 //=============================================================================================================
-// DEFINE MEMBER METHODS
+// DEFINE NAMESPACE MNESCAN
 //=============================================================================================================
 
-FtBufferSetupWidget::FtBufferSetupWidget(FtBuffer* toolbox,
-                                         const QString& sSettingsPath,
-                                         QWidget *parent)
-: QWidget(parent)
-, m_pFtBuffer(toolbox)
-, m_sSettingsPath(sSettingsPath)
-, m_pUi(new Ui::FtBufferSetupUi)
+namespace MNESCAN
 {
-    m_pUi->setupUi(this);
-
-    this->m_pUi->m_lineEditIP->setText(toolbox->m_pFtBuffProducer->m_pFtConnector->getAddr());
-
-    loadSettings();
-
-    //Always connect GUI elemts after m_pUi->setpUi has been called
-    connect(m_pUi->m_qPushButton_Connect, &QPushButton::released,
-            this, &FtBufferSetupWidget::pressedConnect); // Connect/Disconnect button
-
-    connect(this, &FtBufferSetupWidget::connectAtAddr,
-            m_pFtBuffer->m_pFtBuffProducer.data(), &FtBuffProducer::connectToBuffer);
-    connect(m_pFtBuffer->m_pFtBuffProducer.data(), &FtBuffProducer::connecStatus,
-            this, &FtBufferSetupWidget::isConnected);
-
-    connect(m_pUi->m_lineEditIP, &QLineEdit::textChanged,
-            toolbox, &FtBuffer::setBufferAddress);
-    connect(m_pUi->m_spinBoxPort, QOverload<int>::of(&QSpinBox::valueChanged),
-            toolbox, &FtBuffer::setBufferPort);
-    toolbox->setBufferAddress(m_pUi->m_lineEditIP->text());
-    toolbox->setBufferPort(m_pUi->m_spinBoxPort->value());
-}
 
 //=============================================================================================================
-
-FtBufferSetupWidget::~FtBufferSetupWidget()
-{
-    saveSettings();
-}
-
+// MNESCAN FORWARD DECLARATIONS
 //=============================================================================================================
 
-void FtBufferSetupWidget::saveSettings()
+/**
+ * Provides a class for QThread to work on a separate thread, just to hide the splash screen window whenever
+ * found convenient.
+ */
+class MainSplashScreenCloser : public QThread
 {
-    if(m_sSettingsPath.isEmpty()) {
-        return;
-    }
+    Q_OBJECT
+public:
+    typedef QSharedPointer<MainSplashScreenCloser> SPtr;               /**< Shared pointer type for MainSplashScreenHider. */
+    typedef QSharedPointer<const MainSplashScreenCloser> ConstSPtr;    /**< Const shared pointer type for MainSplashScreenHider. */
+    //=========================================================================================================
+    MainSplashScreenCloser(MainSplashScreen& splashScreen);
 
-    // Save Settings
-    QSettings settings("MNECPP");
+    //=========================================================================================================
+    MainSplashScreenCloser(MainSplashScreen& splashScreen, unsigned long sleepTime);
 
-    settings.setValue(m_sSettingsPath + QString("/IP"), m_pUi->m_lineEditIP->text());
-}
+    //=========================================================================================================
+    ~MainSplashScreenCloser();
 
-//=============================================================================================================
 
-void FtBufferSetupWidget::loadSettings()
-{
-    if(m_sSettingsPath.isEmpty()) {
-        return;
-    }
+signals:
 
-    // Load Settings
-    QSettings settings("MNECPP");
+    //=========================================================================================================
+    /**
+     * Notifies that splash window should be closed
+     */
+    void closeSplashscreen();
 
-    m_pUi->m_lineEditIP->setText(settings.value(m_sSettingsPath + QString("/IP"), "127.0.0.1").toString());
-}
+protected:
+    //=========================================================================================================
+    /**
+     * Method to be run from another thread.
+     */
+    void run();
 
-//=============================================================================================================
+    MainSplashScreen& m_pSplashScreenToHide;       /**< Reference to the slpash screen to hide.*/
+    unsigned long   m_iSecondsToSleep;             /**< Time to wait before hiding the splash window.*/
+};
 
-void FtBufferSetupWidget::pressedConnect()
-{
-    emit connectAtAddr(m_pUi->m_lineEditIP->text(),
-                       m_pUi->m_spinBoxPort->value());
-}
-
-//=============================================================================================================
-
-void FtBufferSetupWidget::isConnected(bool stat)
-{
-    if (stat) {
-        m_pUi->m_qPushButton_Connect->setText("Set");
-    } else {
-        qWarning() << "[FtBufferSetupWidget::isConnected] Unable to find relevant fiff info.";
-
-        QMessageBox msgBox;
-        msgBox.setText("Unable to find relevant fiff info. Is there header data in the buffer?");
-        msgBox.exec();
-    }
-}
+} // namespace MNESCAN
+#endif // MAINSPLASHSCREENCLOSER_H

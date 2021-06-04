@@ -96,12 +96,21 @@ EventView::EventView()
     m_pUi->label_2->hide();
 
     onDataChanged();
+    createContextMenu();
 
     m_pTriggerDetectView = QSharedPointer<DISPLIB::TriggerDetectionView>(new DISPLIB::TriggerDetectionView("MNEANALYZE/EVENTS",
                                                                                                            Q_NULLPTR,
                                                                                                            Qt::Window));
     m_pTriggerDetectView->setProcessingMode(DISPLIB::AbstractView::ProcessingMode::Offline);
     m_pTriggerDetectView->setWindowFlag(Qt::WindowStaysOnTopHint);
+}
+
+//=============================================================================================================
+
+EventView::~EventView()
+{
+    delete m_pEventContexMenu;
+    delete m_pGroupContexMenu;
 }
 
 //=============================================================================================================
@@ -135,7 +144,6 @@ void EventView::initMVCSettings()
 
 void EventView::initGUIFunctionality()
 {
-
     //'Activate events' checkbox
     connect(m_pUi->m_checkBox_activateEvents, &QCheckBox::stateChanged,
             this, &EventView::activeEventsChecked, Qt::UniqueConnection);
@@ -158,6 +166,7 @@ void EventView::initGUIFunctionality()
     connect(m_pUi->m_listWidget_groupListWidget->selectionModel(), &QItemSelectionModel::selectionChanged,
             this, &EventView::groupChanged, Qt::UniqueConnection);
 
+    //Init custom context menus
     m_pUi->m_tableView_eventTableView->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(m_pUi->m_tableView_eventTableView, &QWidget::customContextMenuRequested,
             this, &EventView::customEventContextMenuRequested, Qt::UniqueConnection);
@@ -239,6 +248,7 @@ void EventView::onDataChanged()
     m_pUi->m_tableView_eventTableView->viewport()->update();
     m_pUi->m_tableView_eventTableView->viewport()->repaint();
     emit triggerRedraw();
+    emit eventsUpdated();
 }
 
 //=============================================================================================================
@@ -266,7 +276,6 @@ void EventView::removeEvent()
     for (auto it = set.crbegin(); it != set.crend(); ++it){
         m_pEventModel->removeRow(*it);
     }
-
 
     emit triggerRedraw();
 }
@@ -379,7 +388,7 @@ bool EventView::newUserGroup(const QString& sName,
     QColor groupColor;
 
     if (!bDefaultColor) {
-        groupColor = m_pColordialog->getColor(Qt::black, this);
+        groupColor = QColor(rand()%255, rand()%255, rand()%255);
         if(!groupColor.isValid()){
             return false;
         }
@@ -397,73 +406,39 @@ bool EventView::newUserGroup(const QString& sName,
 //=============================================================================================================
 
 void EventView::groupChanged()
-{
-    m_pEventModel->clearGroupSelection();
-
+{    
     auto selection = m_pUi->m_listWidget_groupListWidget->selectionModel()->selectedRows();
 
     if(!selection.size()){
         return;
     }
 
-    for(auto row : selection){
-        m_pEventModel->addToSelectedGroups(row.data(Qt::UserRole).toInt());
-    }
-
-    m_pUi->m_listWidget_groupListWidget->repaint();
-    m_pUi->m_tableView_eventTableView->repaint();
-    m_pUi->m_tableView_eventTableView->reset();
-
-    this->onDataChanged();
+    m_pEventModel->updateSelectedGroups(selection);
 }
 
 //=============================================================================================================
 
 void EventView::customEventContextMenuRequested(const QPoint &pos)
 {
-    QMenu* menu = new QMenu(this);
-
-    QAction* deleteEvent = menu->addAction(tr("Delete event"));
-    connect(deleteEvent, &QAction::triggered,
-            this, &EventView::removeEvent, Qt::UniqueConnection);
-
-    QAction* jumpToEvent = menu->addAction(tr("Jump to event"));
-    connect(jumpToEvent, &QAction::triggered,
-            this, &EventView::jumpToSelected, Qt::UniqueConnection);
-
-    menu->popup(m_pUi->m_tableView_eventTableView->viewport()->mapToGlobal(pos));
+    if(m_pEventContexMenu){
+        m_pEventContexMenu->popup(m_pUi->m_tableView_eventTableView->viewport()->mapToGlobal(pos));
+    }
 }
 
 //=============================================================================================================
 
 void EventView::customGroupContextMenuRequested(const QPoint &pos)
 {
-    QMenu* menu = new QMenu(this);
-
-    QAction* colorChange = menu->addAction(tr("Change color"));
-    connect(colorChange, &QAction::triggered,
-            this, &EventView::changeGroupColor, Qt::UniqueConnection);
-
-    QAction* markTime = menu->addAction(tr("Delete group"));
-    connect(markTime, &QAction::triggered,
-            this, &EventView::deleteGroup, Qt::UniqueConnection);
-
-    menu->popup(m_pUi->m_listWidget_groupListWidget->viewport()->mapToGlobal(pos));
+    if(m_pGroupContexMenu){
+        m_pGroupContexMenu->popup(m_pUi->m_listWidget_groupListWidget->viewport()->mapToGlobal(pos));
+    }
 }
 
 //=============================================================================================================
 
 void EventView::deleteGroup()
 {
-//    int iSelected = m_pUi->m_listWidget_groupListWidget->selectionModel()->selectedRows().first().row();
-//    QListWidgetItem* itemToDelete = m_pUi->m_listWidget_groupListWidget->takeItem(iSelected);
-//    m_pEventModel->removeGroup(itemToDelete->data(Qt::UserRole).toInt());
-//    m_pUi->m_listWidget_groupListWidget->selectionModel()->clearSelection();
-//    delete itemToDelete;
-
     m_pEventModel->deleteSelectedGroups();
-    onDataChanged();
-    emit groupsUpdated();
 }
 
 //=============================================================================================================
@@ -486,8 +461,6 @@ void EventView::changeGroupColor()
     }
 
     m_pEventModel->setGroupColor(groupColor);
-
-    onDataChanged();
 }
 
 //=============================================================================================================
@@ -513,8 +486,10 @@ void EventView::initTriggerDetect(const QSharedPointer<FIFFLIB::FiffInfo>info)
 void EventView::onDetectTriggers(const QString &sChannelName,
                                               double dThreshold)
 {
-    if (!m_pFiffRawModel)
+    if (!m_pFiffRawModel) {
         qWarning() << "[EventView::onDetectTriggers] No Fiff Raw Model selected for trigger detection.";
+        return;
+    }
 
     if(m_FutureWatcher.isRunning()){
         return;
@@ -627,7 +602,6 @@ void EventView::createGroupsFromTriggers()
     }
 
     emit triggerRedraw();
-    emit groupsUpdated();
     emit loadingEnd("Detecting triggers...");
 }
 
@@ -670,7 +644,6 @@ void EventView::redrawGroups()
     }
 
     qDebug() << "EventView::redrawGroups";
-    emit groupsUpdated();
     emit triggerRedraw();
 }
 
@@ -683,4 +656,31 @@ void EventView::onGroupItemNameChanged(QListWidgetItem *item)
     if(m_pEventModel){
         m_pEventModel->setGroupName(iGroupId, item->text());
     }
+}
+
+//=============================================================================================================
+
+void EventView::createContextMenu()
+{
+    //Event view custom right click menu
+    m_pEventContexMenu = new QMenu(this);
+
+    QAction* deleteEvent = m_pEventContexMenu->addAction(tr("Delete event"));
+    connect(deleteEvent, &QAction::triggered,
+            this, &EventView::removeEvent, Qt::UniqueConnection);
+
+    QAction* jumpToEvent = m_pEventContexMenu->addAction(tr("Jump to event"));
+    connect(jumpToEvent, &QAction::triggered,
+            this, &EventView::jumpToSelected, Qt::UniqueConnection);
+
+    //Group view custom right click menu
+    m_pGroupContexMenu = new QMenu(this);
+
+    QAction* colorChange = m_pGroupContexMenu->addAction(tr("Change color"));
+    connect(colorChange, &QAction::triggered,
+            this, &EventView::changeGroupColor, Qt::UniqueConnection);
+
+    QAction* markTime = m_pGroupContexMenu->addAction(tr("Delete group"));
+    connect(markTime, &QAction::triggered,
+            this, &EventView::deleteGroup, Qt::UniqueConnection);
 }

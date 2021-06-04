@@ -1,17 +1,13 @@
 #==============================================================================================================
 #
-# @file     utils.pro
-# @author   Lars Debor <Lars.Debor@tu-ilmenau.de>;
-#           Daniel Strohmeier <Daniel.Strohmeier@tu-ilmenau.de>;
-#           Lorenz Esch <lesch@mgh.harvard.edu>;
-#           Christoph Dinh <chdinh@nmr.mgh.harvard.edu>;
-#           Juan GPC <jgarciaprieto@mgh.harvard.edu>
-# @since    0.1.0
-# @date     July, 2012
+# @file     ex_fiff_sniff.pro
+# @author
+# @since    0.1.9
+# @date     June, 2021
 #
 # @section  LICENSE
-#
-# Copyright (C) 2021, Lars Debor, Daniel Strohmeier, Lorenz Esch, Christoph Dinh, Juan GPC. All rights reserved.
+#d
+# Copyright (C) 2021, . All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without modification, are permitted provided that
 # the following conditions are met:
@@ -32,90 +28,59 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #
 #
-# @brief    This project file builds the Utils library.
+# @brief    Example of the FiffIO interface class
 #
 #==============================================================================================================
 
 include(../../mne-cpp.pri)
 
-TEMPLATE = lib
+TEMPLATE = app
 
-CONFIG += skip_target_version_ext
-
+QT += network
 QT -= gui
-QT += concurrent
 
-DEFINES += UTILS_LIBRARY
+CONFIG   += console
+!contains(MNECPP_CONFIG, withAppBundles) {
+    CONFIG -= app_bundle
+}
 
-DESTDIR = $${MNE_LIBRARY_DIR}
+DESTDIR =  $${MNE_BINARY_DIR}
 
-TARGET = Utils
-TARGET = $$join(TARGET,,"mnecpp",)
+TARGET = fiffsniff
 CONFIG(debug, debug|release) {
     TARGET = $$join(TARGET,,,d)
 }
 
 contains(MNECPP_CONFIG, static) {
-    CONFIG += staticlib
+    CONFIG += static
     DEFINES += STATICBUILD
+}
+
+LIBS += -L$${MNE_LIBRARY_DIR}
+CONFIG(debug, debug|release) {
+    LIBS += -lmnecppMned \
+            -lmnecppFiffd \
+            -lmnecppFsd \
+            -lmnecppUtilsd \
 } else {
-    CONFIG += shared
+    LIBS += -lmnecppMne \
+            -lmnecppFiff \
+            -lmnecppFs \
+            -lmnecppUtils \
 }
 
 SOURCES += \
-    kmeans.cpp \
-    mnemath.cpp \
-    ioutils.cpp \
-    layoutloader.cpp \
-    layoutmaker.cpp \
-    selectionio.cpp \
-    spectrogram.cpp \
-    warp.cpp \
-    sphere.cpp \
-    generics/observerpattern.cpp \
-    generics/applicationlogger.cpp \
-    spectral.cpp \
-    mnetracer.cpp
-
-HEADERS += \
-    kmeans.h\
-    utils_global.h \
-    mnemath.h \
-    ioutils.h \
-    layoutloader.h \
-    layoutmaker.h \
-    selectionio.h \
-    spectrogram.h \
-    warp.h \
-    sphere.h \
-    simplex_algorithm.h \
-    generics/circularbuffer.h \
-    generics/commandpattern.h \
-    generics/observerpattern.h \
-    generics/applicationlogger.h \
-    spectral.h \
-    mnetracer.h
+        main.cpp \
 
 INCLUDEPATH += $${EIGEN_INCLUDE_DIR}
 INCLUDEPATH += $${MNE_INCLUDE_DIR}
 
-# Install headers to include directory
-header_files.files = $${HEADERS}
-header_files.path = $${MNE_INSTALL_INCLUDE_DIR}/utils
-
-INSTALLS += header_files
-
-contains(MNECPP_CONFIG, withCodeCov) {
-    QMAKE_CXXFLAGS += --coverage
-    QMAKE_LFLAGS += --coverage
-}
-
-win32:!contains(MNECPP_CONFIG, static) {
-    QMAKE_POST_LINK += $$QMAKE_COPY $$shell_path($${MNE_LIBRARY_DIR}/$${TARGET}.dll) $${MNE_BINARY_DIR}
+unix:!macx {
+    QMAKE_RPATHDIR += $ORIGIN/../lib
 }
 
 macx {
-    QMAKE_LFLAGS_SONAME = -Wl,-install_name,@rpath/
+    QMAKE_LFLAGS += -Wl,-rpath,@executable_path/../lib
 }
 
 # Activate FFTW backend in Eigen for non-static builds only
@@ -137,3 +102,4 @@ contains(MNECPP_CONFIG, useFFTW):!contains(MNECPP_CONFIG, static) {
                 -lfftw3_threads \
     }
 }
+
