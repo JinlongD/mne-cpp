@@ -79,3 +79,4 @@ SUBDIRS += \
     rtfwd \
     tmscontroller \
     bandpower \
+    classifiers \
