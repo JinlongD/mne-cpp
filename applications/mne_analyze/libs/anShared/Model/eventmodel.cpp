@@ -44,6 +44,8 @@
 #include <iomanip>
 #include <iostream>
 
+#include <rtprocessing/detecttrigger.h>
+
 //=============================================================================================================
 // QT INCLUDES
 //=============================================================================================================
@@ -68,10 +70,10 @@
 using namespace ANSHAREDLIB;
 
 //=============================================================================================================
-// DEFINE GLOBAL METHODS
+// DEFINE STATIC METHODS
 //=============================================================================================================
 
-#define ALLGROUPS 9999
+const double EventModel::m_dThreshold = 1e-2;;
 
 //=============================================================================================================
 // DEFINE MEMBER METHODS
@@ -102,6 +104,9 @@ EventModel::EventModel(QSharedPointer<FiffRawViewModel> pFiffModel,
 , m_pFiffModel(pFiffModel)
 {
     initModel();
+
+    connect(m_pFiffModel.data(), &FiffRawViewModel::newRealtimeData,
+            this, &EventModel::getEventsFromNewData);
 }
 
 //=============================================================================================================
@@ -490,30 +495,17 @@ void EventModel::appendSelected(int iSelectedIndex)
 
 //=============================================================================================================
 
-MatrixXi EventModel::getEventMatrix(int iGroup)
+MatrixXi EventModel::getEventMatrix()
 {
     MatrixXi matEventDataMatrix;
 
-    if(iGroup == 9999){
-        //Current selecting in Event Plugin
+    auto events = m_EventManager.getEventsInGroups(m_selectedEventGroups);
 
-        auto events = m_EventManager.getEventsInGroups(m_selectedEventGroups);
-
-        matEventDataMatrix.resize(events->size(), 3);
-        for (int i = 0; i < events->size(); i++){
-            matEventDataMatrix(i,0) = events->at(i).sample;
-            matEventDataMatrix(i,1) = 0;
-            matEventDataMatrix(i,2) = 1;
-        }
-    } else {
-        auto events = m_EventManager.getEventsInGroup(iGroup);
-
-        matEventDataMatrix.resize(events->size(), 3);
-        for (int i = 0; i < events->size(); i++){
-            matEventDataMatrix(i,0) = events->at(i).sample;
-            matEventDataMatrix(i,1) = 0;
-            matEventDataMatrix(i,2) = 1;
-        }
+    matEventDataMatrix.resize(events->size(), 3);
+    for (int i = 0; i < events->size(); i++){
+        matEventDataMatrix(i,0) = events->at(i).sample;
+        matEventDataMatrix(i,1) = 0;
+        matEventDataMatrix(i,2) = 1;
     }
 
     return matEventDataMatrix;
@@ -651,7 +643,7 @@ std::unique_ptr<std::vector<EVENTSLIB::EventGroup> > EventModel::getGroupsToDisp
 void EventModel::clearGroupSelection()
 {
     m_selectedEventGroups.clear();
-    eventsUpdated();
+    //eventsUpdated();
 }
 
 //=============================================================================================================
@@ -659,7 +651,7 @@ void EventModel::clearGroupSelection()
 void EventModel::addToSelectedGroups(int iGroupId)
 {
     m_selectedEventGroups.push_back(iGroupId);
-    eventsUpdated();
+    //eventsUpdated();
 }
 
 //=============================================================================================================
@@ -710,4 +702,89 @@ void EventModel::setSharedMemory(bool bState)
 std::vector<uint> EventModel::getEventSelection() const
 {
     return m_listEventSelection;
+}
+
+//=============================================================================================================
+
+void EventModel::updateSelectedGroups(const QList<QModelIndex> &indexList)
+{
+    clearGroupSelection();
+
+    for(auto row : indexList){
+        addToSelectedGroups(row.data(Qt::UserRole).toInt());
+    }
+
+    eventsUpdated();
+}
+
+void EventModel::getEventsFromNewData()
+{
+    auto info = m_pFiffModel->getFiffInfo();
+    auto raw = m_pFiffModel->getFiffIO()->m_qlistRaw.first().data();
+
+    auto previousLastSample = m_pFiffModel->getPreviousLastSample();
+
+    int iFirstSample = m_pFiffModel->absoluteFirstSample();
+
+    std::list<int> stimChannelIndexList;
+
+    for(int i = 0; i < info->chs.size(); i++) {
+        if(info->chs[i].kind == FIFFV_STIM_CH) {
+            stimChannelIndexList.push_back(i);
+        }
+    }
+
+    Eigen::MatrixXd mSampleData, mSampleTimes;
+
+    if(previousLastSample > 0){
+        raw->read_raw_segment(mSampleData,
+                              mSampleTimes,
+                              previousLastSample);
+    }
+    else {
+        raw->read_raw_segment(mSampleData,
+                              mSampleTimes);
+    }
+
+    for (int iChannelIndex : stimChannelIndexList){
+        QList<QPair<int,double>> detectedTriggerSamples = RTPROCESSINGLIB::detectTriggerFlanksMax(mSampleData,
+                                                                                                  iChannelIndex,
+                                                                                                  0,
+                                                                                                  m_dThreshold,
+                                                                                                  0);
+
+        QMap<double,QList<int>> mEventsinTypes;
+
+        for(const auto& sample : detectedTriggerSamples){
+            mEventsinTypes[sample.second].append(sample.first);
+        }
+
+        QList<double> keyList = mEventsinTypes.keys();
+
+        auto groups = m_EventManager.getAllGroups();
+
+        for (auto key : keyList){
+            QString name =info->chs[iChannelIndex].ch_name + "_" + QString::number(static_cast<int>(key));
+            bool foundMatch = false;
+            int groupID = 0;
+            for(auto& group : *groups){
+                if(name.toStdString() == group.name){
+                    foundMatch = true;
+                    groupID = group.id;
+                    break;
+                }
+            }
+
+            if(!foundMatch){
+                auto newGroup = m_EventManager.addGroup(name.toStdString());
+                groupID = newGroup.id;
+            }
+
+            for (auto event : mEventsinTypes[key]){
+                m_EventManager.addEvent(event + iFirstSample, groupID);
+            }
+        }
+
+    }
+
 }

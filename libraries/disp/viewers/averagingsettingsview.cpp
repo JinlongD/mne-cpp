@@ -224,13 +224,12 @@ void AveragingSettingsView::redrawGUI()
     connect(m_pUi->m_checkBox_reject, &QCheckBox::clicked,
             this, &AveragingSettingsView::changeDropActive);
 
-    connect(m_pUi->comboBox_EventGroup, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
-            this, &AveragingSettingsView::onChangeGroupSelect, Qt::UniqueConnection);
+    connect(m_pUi->checkBox_autoCompute, &QCheckBox::clicked,
+            this, &AveragingSettingsView::setAutoCompute);
 
     m_pUi->m_pushButton_compute->hide();
     m_pUi->m_checkBox_reject->hide();
-    m_pUi->label_2_EventGroup->hide();
-    m_pUi->comboBox_EventGroup->hide();
+    m_pUi->m_pushButton_compute->hide();
 
     setWindowFlags(Qt::WindowStaysOnTopHint);
 
@@ -348,8 +347,7 @@ void AveragingSettingsView::updateProcessingMode(ProcessingMode mode)
             m_pUi->m_label_numberAverages->hide();
             m_pUi->m_pushButton_compute->show();
             m_pUi->m_checkBox_reject->show();
-            m_pUi->label_2_EventGroup->show();
-            m_pUi->comboBox_EventGroup->show();
+            m_pUi->checkBox_autoCompute->show();
             break;
         default: // default is realtime mode
             m_pUi->m_pSpinBoxNumAverages->show();
@@ -359,8 +357,7 @@ void AveragingSettingsView::updateProcessingMode(ProcessingMode mode)
             m_pUi->m_label_numberAverages->show();
             m_pUi->m_pushButton_compute->hide();
             m_pUi->m_checkBox_reject->hide();
-            m_pUi->label_2_EventGroup->hide();
-            m_pUi->comboBox_EventGroup->hide();
+            m_pUi->checkBox_autoCompute->hide();
             break;
     }
 }
@@ -446,29 +443,6 @@ void AveragingSettingsView::onChangeStimChannel()
 
 //=============================================================================================================
 
-void AveragingSettingsView::addSelectionGroup(const QString& sGroupName,
-                                              int iGroupId)
-{
-    m_pUi->comboBox_EventGroup->addItem(sGroupName, QVariant(iGroupId));
-}
-
-//=============================================================================================================
-
-void AveragingSettingsView::clearSelectionGroup()
-{
-    m_pUi->comboBox_EventGroup->clear();
-    m_pUi->comboBox_EventGroup->addItem("Current Selection", 9999);
-}
-
-//=============================================================================================================
-
-QString AveragingSettingsView::getCurrentSelectGroup()
-{
-    return m_pUi->comboBox_EventGroup->currentText();
-}
-
-//=============================================================================================================
-
 void AveragingSettingsView::clearView()
 {
 
@@ -476,7 +450,7 @@ void AveragingSettingsView::clearView()
 
 //=============================================================================================================
 
-void AveragingSettingsView::onChangeGroupSelect(int iIndex)
+bool AveragingSettingsView::getAutoComputeStatus()
 {
-    emit changeGroupSelect(m_pUi->comboBox_EventGroup->itemData(iIndex).toInt());
+    return m_pUi->checkBox_autoCompute->isChecked();
 }

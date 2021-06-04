@@ -121,8 +121,7 @@ public:
 
     void setDetectedEpochs(const FIFFLIB::FiffEvokedSet& evokedSet);
 
-    void addSelectionGroup(const QString& sGroupName,
-                           int iGroupId);
+    bool getAutoComputeStatus();
 
     void clearSelectionGroup();
 
@@ -200,7 +199,7 @@ signals:
     void changeAverageMode(qint32 index);
     void calculateAverage(bool state);
     void changeDropActive(bool state);
-    void changeGroupSelect(int iId);
+    void setAutoCompute(bool state);
 };
 } // NAMESPACE
 

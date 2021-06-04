@@ -199,13 +199,6 @@ bool BabyMEG::start()
 
     m_pMyClient->ConnectToBabyMEG();
 
-    if(!m_pFiffInfo) {
-        QMessageBox msgBox;
-        msgBox.setText("FiffInfo is missing!");
-        msgBox.exec();
-        return false;
-    }
-
     if(!m_pMyClient->isConnected()) {
         qInfo() << "BabyMEG::start - Not connected to BabyMEG device. Try connecting manually via the Connection tab.";
 
@@ -256,12 +249,6 @@ QWidget* BabyMEG::setupWidget()
 
     if(m_pFiffInfo) {
         widget->setSamplingFrequency();
-    }
-
-    if(m_pMyClient->isConnected()) {
-        widget->setConnectionStatus(true);
-    } else {
-        widget->setConnectionStatus(false);
     }
 
     return widget;
