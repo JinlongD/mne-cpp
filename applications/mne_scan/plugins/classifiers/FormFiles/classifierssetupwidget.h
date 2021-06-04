@@ -44,12 +44,13 @@
 //=====================================================================================================================
 // QT INCLUDES
 //=====================================================================================================================
-//#include <QWidget>
-#include <QtWidgets>
+#include <QWidget>
+//#include <QtWidgets>
 
 //=====================================================================================================================
 // EIGEN INCLUDES
 //=====================================================================================================================
+#include <Eigen/Core>
 
 //=====================================================================================================================
 // FORWARD DECLARATIONS
@@ -71,7 +72,52 @@ class Classifiers;
 
 //=====================================================================================================================
 /**
- * DECLARE CLASSClassifiersSetupWidget
+ * @brief The paramLDA struct   parameters for Linear Discriminant Analysis (LDA) classifier.
+ */
+struct paramLDA {
+    Eigen::MatrixXd         matWeight;      // weight matrix (linear)
+    Eigen::VectorXd         vecBias;        // bias vector
+    QStringList             sClassNames;    // class names
+    qint32                  iClassNum;      // number of classes
+};
+
+//=====================================================================================================================
+/**
+ * @brief The paramFDA struct   parameters for Fisher's Discriminant Analysis (FDA) classifier.
+ */
+struct paramFDA {
+    Eigen::MatrixXd         matWeight;      // weight matrix
+    Eigen::MatrixXd         vecMeanProj;    // projected mean vectors (columns)
+    QStringList             sClassNames;    // class names
+    qint32                  iClassNum;      // number of classes
+};
+
+//=====================================================================================================================
+/**
+ * @brief The paramMD struct    parameters for Mahalanobis Distance (MD) based classifier.
+ */
+struct paramMD {
+    QList<Eigen::MatrixXd>  matCovariance;  // weight matrix
+    Eigen::MatrixXd         vecMean;        // mean vectors (columns)
+    QStringList             sClassNames;    // class names
+    qint32                  iClassNum;      // number of classes
+};
+
+//=====================================================================================================================
+/**
+ * @brief The paramQDA struct   parameters for Quadratic Discriminant Analysis (QDA) classifier.
+ */
+struct paramQDA {
+    QList<Eigen::MatrixXd>  matWeightQuad;  // quadratic weight matrix
+    Eigen::MatrixXd         matWeight;      // linear weight matrix
+    Eigen::VectorXd         vecBias;        // bias vector
+    QStringList             sClassNames;    // class names
+    qint32                  iClassNum;      // number of classes
+};
+
+//=====================================================================================================================
+/**
+ * DECLARE CLASS ClassifiersSetupWidget
  *
  * @brief The ClassifiersSetupWidget class provides the Classifiers configuration window.
  */
@@ -82,28 +128,96 @@ class ClassifiersSetupWidget : public QWidget
 public:
     //=================================================================================================================
     /**
-     * Constructs a ClassifiersSetupWidget which is a child of parent.
-     *
-     * @param [in] toolbox a pointer to the corresponding Classifiers.
-     * @param [in] parent pointer to parent widget;
-     *              If parent is 0, the new ClassifiersSetupWidget becomes a window.
-     *              If parent is another widget, ClassifiersSetupWidget becomes a child window inside parent.
-     *              ClassifiersSetupWidget is deleted when its parent is deleted.
+     * @brief ClassifiersSetupWidget    Constructs a ClassifiersSetupWidget which is a child of parent.
+     * @param [in] pClassifiers         A pointer to the corresponding Classifiers.
+     * @param [in] sSettingsPath        QString providing path to save the settings.
+     * @param [in] parent               Pointer to parent widget;
+     *                                  If parent is 0, the new ClassifiersSetupWidget becomes a window.
+     *                                  If parent is another widget, ClassifiersSetupWidget becomes a child window inside parent.
+     *                                  ClassifiersSetupWidget is deleted when its parent is deleted.
      */
-    ClassifiersSetupWidget(Classifiers *pClassifiers = 0, QWidget *parent = 0);
+    ClassifiersSetupWidget(Classifiers *pClassifiers = 0, const QString &sSettingsPath = "", QWidget *parent = 0);
 
     //=================================================================================================================
     /**
-     * Destroys the ClassifiersSetupWidget.
-     * All ClassifiersSetupWidget's children are deleted first.
-     * The application exits if ClassifiersSetupWidget is the main widget.
+     * @brief ~ClassifiersSetupWidget   Destroys the ClassifiersSetupWidget.
+     *                                  All ClassifiersSetupWidget's children are deleted first.
+     *                                  The application exits if ClassifiersSetupWidget is the main widget.
      */
     ~ClassifiersSetupWidget();
 
 private:
-    Classifiers*               m_pClassifiers;	/**< Holds a pointer to corresponding Classifiers.*/
+    //=================================================================================================================
+    /**
+     * @brief saveSettings      Saves all important settings of this view via QSettings.
+     */
+    void saveSettings();
 
-    Ui::ClassifiersSetupWidget*  m_pUi;              /**< Holds the user interface for the ClassifiersSetupWidget.*/
+    //=================================================================================================================
+    /**
+     * @brief loadSettings      Loads and inits all important settings of this view via QSettings.
+     */
+    void loadSettings();
+
+public:
+    //=================================================================================================================
+    // Add your public method functions/members here.
+    //=================================================================================================================
+    /**
+     * @brief onPushbuttonLoadTrainedClassifier
+     */
+    void onPushbuttonLoadTrainedClassifier();
+
+    //=================================================================================================================
+    /**
+     * @brief onPushbuttonLoadFeatureData
+     */
+    void onPushbuttonLoadFeatureData();
+
+    //=================================================================================================================
+    /**
+     * @brief onPushbuttonLoadRawData
+     */
+    void onPushbuttonLoadRawData();
+
+    //=================================================================================================================
+    /**
+     * @brief onPushbuttonTrainFromFeature
+     */
+    void onPushbuttonTrainFromFeature();
+
+    //=================================================================================================================
+    /**
+     * @brief onPushbuttonTrainFromRaw
+     */
+    void onPushbuttonTrainFromRaw();
+
+private:
+    //=================================================================================================================
+    // Add your private method functions/members here.
+    //=================================================================================================================
+
+    //=================================================================================================================
+    Classifiers*                    m_pClassifiers;     /**< Holds a pointer to corresponding Classifiers.*/
+    Ui::ClassifiersSetupWidget*     m_pUi;              /**< Holds the user interface for the ClassifiersSetupWidget.*/
+    QString                         m_sSettingsPath;    /**< The settings path to store the GUI settings to. */
+
+    bool            m_bIsTrainedClassifierInit;
+    qint8           m_iNumClassifiers;
+    qint8           m_iNumClasses;
+    qint32          m_iNumFeatureDimension;
+    QStringList     m_sClassifierNames;
+
+    // classifiers
+    paramFDA        m_classifierFDA;
+    paramLDA        m_classifierLDA;
+    paramQDA        m_classifierQDA;
+    paramMD         m_classifierMD;
+
+signals:
+    //=================================================================================================================
+    // Add your signals here.
+    //=================================================================================================================
 };
 } // NAMESPACE
 

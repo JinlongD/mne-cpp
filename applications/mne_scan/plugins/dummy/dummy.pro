@@ -1,6 +1,6 @@
 #======================================================================================================================
 #
-# @file     classifiers.pro
+# @file     dummy.pro
 # @author   Christoph Dinh <chdinh@nmr.mgh.harvard.edu>;
 #           Lorenz Esch <lesch@mgh.harvard.edu>
 # @since    0.1.0
@@ -29,16 +29,16 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #
 #
-# @brief    This project file generates the makefile for the classifiers plug-in.
+# @brief    This project file generates the makefile for the dummy plug-in.
 #
 #======================================================================================================================
 include(../../../../mne-cpp.pri)
 
 QT += core widgets
 
-DEFINES += CLASSIFIERS_PLUGIN
+DEFINES += DUMMY_PLUGIN
 
-TARGET = classifiers
+TARGET = dummy
 
 TEMPLATE = lib
 
@@ -82,23 +82,21 @@ CONFIG(debug, debug|release) {
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 ##=====================================================================================================================
 SOURCES += \
-        classifiers.cpp \
-        FormFiles/classifierssetupwidget.cpp \
-        FormFiles/classifierssettingsview.cpp \
-        matparser.cpp
+        dummy.cpp \
+        FormFiles/dummysetupwidget.cpp \
+        FormFiles/dummysettingsview.cpp
 
 HEADERS += \
-        classifiers.h\
-        classifiers_global.h \
-        FormFiles/classifierssetupwidget.h \
-        FormFiles/classifierssettingsview.h \
-    matparser.h
+        dummy.h\
+        dummy_global.h \
+        FormFiles/dummysetupwidget.h \
+        FormFiles/dummysettingsview.h \
 
 FORMS += \
-        FormFiles/classifierssetupwidget.ui \
-        FormFiles/classifierssettingsview.ui
+        FormFiles/dummysetupwidget.ui \
+        FormFiles/dummysettingsview.ui
 
-OTHER_FILES += classifiers.json
+OTHER_FILES += dummy.json
 
 DISTFILES +=
 

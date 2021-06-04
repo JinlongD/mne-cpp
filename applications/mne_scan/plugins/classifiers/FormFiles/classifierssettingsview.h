@@ -54,11 +54,11 @@
 // FORWARD DECLARATIONS
 //=====================================================================================================================
 namespace Ui{
-    class ClassifiersSettingsView;
+class ClassifiersSettingsView;
 }
 
 //=====================================================================================================================
-// DEFINE NAMESPACE CLASSIFIERSRPLUGIN
+// DEFINE NAMESPACE CLASSIFIERSPLUGIN
 //=====================================================================================================================
 namespace CLASSIFIERSPLUGIN
 {
@@ -78,30 +78,27 @@ class ClassifiersSettingsView : public QWidget
     Q_OBJECT
 
 public:
-    typedef QSharedPointer<ClassifiersSettingsView> SPtr;         /**< Shared pointer type for ClassifiersSettingsView. */
+    typedef QSharedPointer<ClassifiersSettingsView> SPtr;               /**< Shared pointer type for ClassifiersSettingsView. */
     typedef QSharedPointer<const ClassifiersSettingsView> ConstSPtr;    /**< Const shared pointer type for ClassifiersSettingsView. */
 
     //=================================================================================================================
     /**
      * @brief ClassifiersSettingsView   Constructs a ClassifiersSettingsView.
-     * @param sSettingsPath
-     * @param parent
+     * @param [in] sSettingsPath        QString providing path to save the settings.
+     * @param [in] parent               Pointer to parent widget;
+     *                                  If parent is 0, the new ClassifiersSettingsView becomes a window.
+     *                                  If parent is another widget, ClassifiersSettingsView becomes a child window inside parent.
+     *                                  ClassifiersSettingsView is deleted when its parent is deleted.
      */
-    explicit ClassifiersSettingsView(const QString& sSettingsPath = "",
-                             QWidget *parent = 0);
+    explicit ClassifiersSettingsView(const QString &sSettingsPath = "", QWidget *parent = 0);
 
     //=================================================================================================================
     /**
-     * @brief ~ClassifiersSettingsView   Destroys the ClassifiersSettingsView.
+     * @brief ~ClassifiersSettingsView  Destroys the ClassifiersSettingsView.
+     *                                  All ClassifiersSetupWidget's children are deleted first.
+     *                                  The application exits if ClassifiersSetupWidget is the main widget.
      */
     ~ClassifiersSettingsView();
-
-    //=================================================================================================================
-    /**
-     * @brief slots called when pushbuttons are clicked.
-     */
-    void onPushButtonAddOne();
-    void onPushButtonDeleteOne();
 
 private:
     //=================================================================================================================
@@ -116,17 +113,28 @@ private:
      */
     void loadSettings();
 
+public:
+    //=================================================================================================================
+    // Add your public method functions/members here.
+    //=================================================================================================================
+
 private:
-    QString                         m_sSettingsPath;    /**< The settings path to store the GUI settings to. */
+    //=================================================================================================================
+    // Add your private method functions/members here.
+    //=================================================================================================================
+
+    //=================================================================================================================
     Ui::ClassifiersSettingsView*    m_pUi;              /**< The UI class specified in the designer. */
+    QString                         m_sSettingsPath;    /**< The settings path to store the GUI settings to. */
 
 signals:
+    //=================================================================================================================
+    // Add your signals here.
+    //=================================================================================================================
     //=================================================================================================================
     /**
      * @brief Emitted whenever the settings changed and are ready to be retreived.
      */
-    void sig_addOneChannel();
-    void sig_deleteOneChannel();
 };
 }   //namespace
 

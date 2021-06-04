@@ -1,6 +1,6 @@
 ﻿//=====================================================================================================================
 /**
- * @file     classifiers.h
+ * @file     dummy.h
  * @author   Christoph Dinh <chdinh@nmr.mgh.harvard.edu>;
  *           Lorenz Esch <lesch@mgh.harvard.edu>;
  *           Viktor Klueber <Viktor.Klueber@tu-ilmenau.de>
@@ -30,17 +30,17 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  *
- * @brief    Contains the declaration of the classifiers class.
+ * @brief    Contains the declaration of the dummy class.
  *
  */
 //=====================================================================================================================
-#ifndef CLASSIFIERS_H
-#define CLASSIFIERS_H
+#ifndef DUMMY_H
+#define DUMMY_H
 
 //=====================================================================================================================
 // INCLUDES
 //=====================================================================================================================
-#include "classifiers_global.h"
+#include "dummy_global.h"
 
 #include <scShared/Plugins/abstractalgorithm.h>
 #include <scMeas/realtimemultisamplearray.h>
@@ -63,44 +63,44 @@
 //=====================================================================================================================
 
 //=====================================================================================================================
-// DEFINE NAMESPACE CLASSIFIERSPLUGIN
+// DEFINE NAMESPACE DUMMYPLUGIN
 //=====================================================================================================================
-namespace CLASSIFIERSPLUGIN
+namespace DUMMYPLUGIN
 {
 
 //=====================================================================================================================
-// CLASSIFIERSPLUGIN FORWARD DECLARATIONS
+// DUMMYPLUGIN FORWARD DECLARATIONS
 //=====================================================================================================================
 
 //=====================================================================================================================
 /**
- * DECLARE CLASS Classifiers
+ * DECLARE CLASS Dummy
  *
- * @brief The Classifiers class provides classification algorithms.
+ * @brief The Dummy class provides a Dummy algorithm structure.
  */
-class CLASSIFIERSSHARED_EXPORT Classifiers : public SCSHAREDLIB::AbstractAlgorithm
+class DUMMYSHARED_EXPORT Dummy : public SCSHAREDLIB::AbstractAlgorithm
 {
     Q_OBJECT
-    Q_PLUGIN_METADATA(IID "scsharedlib/1.0" FILE "classifiers.json") //New Qt5 Plugin system replaces Q_EXPORT_PLUGIN2 macro
+    Q_PLUGIN_METADATA(IID "scsharedlib/1.0" FILE "dummy.json") //New Qt5 Plugin system replaces Q_EXPORT_PLUGIN2 macro
     // Use the Q_INTERFACES() macro to tell Qt's meta-object system about the interfaces
     Q_INTERFACES(SCSHAREDLIB::AbstractAlgorithm)
 
 public:
     //=================================================================================================================
     /**
-     * @brief Classifiers       Constructs a Classifiers.
+     * @brief Dummy       Constructs a Dummy.
      */
-    Classifiers();
+    Dummy();
 
     //=================================================================================================================
     /**
-     * @brief ~Classifiers      Destroys the Classifiers.
+     * @brief ~Dummy      Destroys the Dummy.
      */
-    ~Classifiers();
+    ~Dummy();
 
     //=================================================================================================================
     /**
-     * @brief IAlgorithm functions
+     * IAlgorithm functions
      */
     virtual QSharedPointer<SCSHAREDLIB::AbstractPlugin> clone() const;
     virtual void init();
@@ -135,8 +135,12 @@ public:
     //=================================================================================================================
     // Add your public method functions/members here.
     //=================================================================================================================
-
     //=================================================================================================================
+    /**
+     * @brief onAddOneChannel
+     */
+    void onAddOneChannel();
+    void onDeleteOneChannel();
 
 private:
     //=================================================================================================================
@@ -150,22 +154,22 @@ private:
     SCSHAREDLIB::PluginInputData<SCMEASLIB::RealTimeMultiSampleArray>::SPtr      m_pInput;      /**< The incoming data.*/
     SCSHAREDLIB::PluginOutputData<SCMEASLIB::RealTimeMultiSampleArray>::SPtr     m_pOutput;     /**< The outgoing data.*/
 
-    QMutex              m_qMutex;
-    bool                m_bPluginControlWidgetsInit;
+    QMutex      m_qMutex;
+    bool        m_bPluginControlWidgetsInit;
 
-    // parameters from ClassifiersSettingsView
+    // parameters from DummySettingsView
     bool                m_bChNumReset;
     double              m_dDataSampFreq;
     int                 m_iDataBufferSize;
     int                 m_iNumPickedCh;
-    Eigen::RowVectorXi  m_vecEEGChPicks;            // index vector of EEG channels.
+    Eigen::RowVectorXi  m_vecEEGChPicks;     // index vector of EEG channels.
     QStringList         m_sEEGChNames;
     QStringList         m_sPickedChNames;
 
-    // parameters from ClassifiersSetupWidget
+    // parameters from DummySetupWidget
 
-    // parameters for classifiers
-    QString             m_sSettingsPath;            // settings path string for load/save parameters.
+    // parameters for Dummy
+    QString     m_sSettingsPath;            // settings path string for load/save parameters.
 
 signals:
     //=================================================================================================================
@@ -179,4 +183,4 @@ signals:
 };
 } // NAMESPACE
 
-#endif // CLASSIFIERS_H
+#endif // DUMMY_H

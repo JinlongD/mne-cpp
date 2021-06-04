@@ -1,6 +1,6 @@
 ﻿//=====================================================================================================================
 /**
- * @file     classifierssettingsview.cpp
+ * @file     dummysettingsview.cpp
  * @author   Christoph Dinh <chdinh@nmr.mgh.harvard.edu>;
  *           Lorenz Esch <lesch@mgh.harvard.edu>;
  *           Viktor Klueber <Viktor.Klueber@tu-ilmenau.de>
@@ -30,7 +30,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  *
- * @brief    Definition of the classifierssettingsview class.
+ * @brief    Definition of the dummysettingsview class.
  *
  */
 //=====================================================================================================================
@@ -38,8 +38,8 @@
 //=====================================================================================================================
 // INCLUDES
 //=====================================================================================================================
-#include "classifierssettingsview.h"
-#include "ui_classifierssettingsview.h"
+#include "dummysettingsview.h"
+#include "ui_dummysettingsview.h"
 
 //=====================================================================================================================
 // QT INCLUDES
@@ -54,23 +54,29 @@
 //=====================================================================================================================
 // USED NAMESPACES
 //=====================================================================================================================
-using namespace CLASSIFIERSPLUGIN;
+using namespace DUMMYPLUGIN;
 
 //=====================================================================================================================
 // DEFINE MEMBER METHODS
 //=====================================================================================================================
-ClassifiersSettingsView::ClassifiersSettingsView(const QString& sSettingsPath, QWidget* parent)
+DummySettingsView::DummySettingsView(const QString& sSettingsPath,
+                                                 QWidget *parent)
     : QWidget(parent)
-    , m_pUi(new Ui::ClassifiersSettingsView)
-    , m_sSettingsPath(sSettingsPath)
+    , m_pUi(new Ui::DummySettingsView)
 {
+    m_sSettingsPath = sSettingsPath;
     m_pUi->setupUi(this);
 
     loadSettings();
+
+    connect(m_pUi->m_qPushButton_AddOne, &QPushButton::clicked,
+            this, &DummySettingsView::onPushButtonAddOne);
+    connect(m_pUi->m_qPushButton_DeleteOne, &QPushButton::clicked,
+            this, &DummySettingsView::onPushButtonDeleteOne);
 }
 
 //=====================================================================================================================
-ClassifiersSettingsView::~ClassifiersSettingsView()
+DummySettingsView::~DummySettingsView()
 {
     saveSettings();
 
@@ -78,7 +84,7 @@ ClassifiersSettingsView::~ClassifiersSettingsView()
 }
 
 //=====================================================================================================================
-void ClassifiersSettingsView::saveSettings()
+void DummySettingsView::saveSettings()
 {
     if(m_sSettingsPath.isEmpty()) {
         return;
@@ -90,7 +96,7 @@ void ClassifiersSettingsView::saveSettings()
 }
 
 //=====================================================================================================================
-void ClassifiersSettingsView::loadSettings()
+void DummySettingsView::loadSettings()
 {
     if(m_sSettingsPath.isEmpty()) {
         return;
@@ -99,4 +105,16 @@ void ClassifiersSettingsView::loadSettings()
     QSettings settings("MNECPP");
 
     m_pUi->m_pDoubleSpinBox_dummy->setValue(settings.value(m_sSettingsPath + QString("/valueName"), 10).toInt());
+}
+
+//=====================================================================================================================
+void DummySettingsView::onPushButtonAddOne()
+{
+    emit sig_addOneChannel();
+}
+
+//=====================================================================================================================
+void DummySettingsView::onPushButtonDeleteOne()
+{
+    emit sig_deleteOneChannel();
 }

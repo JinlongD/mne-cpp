@@ -1,6 +1,6 @@
 ﻿//=====================================================================================================================
 /**
- * @file     classifiers.h
+ * @file     dummysetupwidget.h
  * @author   Christoph Dinh <chdinh@nmr.mgh.harvard.edu>;
  *           Lorenz Esch <lesch@mgh.harvard.edu>;
  *           Viktor Klueber <Viktor.Klueber@tu-ilmenau.de>
@@ -30,112 +30,92 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  *
- * @brief    Contains the declaration of the classifiers class.
+ * @brief    Contains the declaration of the dummysetupwidget class.
  *
  */
 //=====================================================================================================================
-#ifndef CLASSIFIERS_H
-#define CLASSIFIERS_H
+#ifndef DUMMYSETUPWIDGET_H
+#define DUMMYSETUPWIDGET_H
 
 //=====================================================================================================================
 // INCLUDES
 //=====================================================================================================================
-#include "classifiers_global.h"
-
-#include <scShared/Plugins/abstractalgorithm.h>
-#include <scMeas/realtimemultisamplearray.h>
-#include <utils/generics/circularbuffer.h>
 
 //=====================================================================================================================
 // QT INCLUDES
 //=====================================================================================================================
+//#include <QWidget>
 #include <QtWidgets>
-#include <QtCore/QtPlugin>
 
 //=====================================================================================================================
 // EIGEN INCLUDES
 //=====================================================================================================================
-//#include <Eigen/Core>
-#include <Eigen/SparseCore>
 
 //=====================================================================================================================
 // FORWARD DECLARATIONS
 //=====================================================================================================================
+namespace Ui {
+    class DummySetupWidget;
+}
 
 //=====================================================================================================================
-// DEFINE NAMESPACE CLASSIFIERSPLUGIN
+// DEFINE NAMESPACE DUMMYPLUGIN
 //=====================================================================================================================
-namespace CLASSIFIERSPLUGIN
+namespace DUMMYPLUGIN
 {
 
 //=====================================================================================================================
-// CLASSIFIERSPLUGIN FORWARD DECLARATIONS
+// DUMMYPLUGIN FORWARD DECLARATIONS
 //=====================================================================================================================
+class Dummy;
 
 //=====================================================================================================================
 /**
- * DECLARE CLASS Classifiers
+ * DECLARE CLASS DummySetupWidget
  *
- * @brief The Classifiers class provides classification algorithms.
+ * @brief The DummySetupWidget class provides the Dummy configuration window.
  */
-class CLASSIFIERSSHARED_EXPORT Classifiers : public SCSHAREDLIB::AbstractAlgorithm
+class DummySetupWidget : public QWidget
 {
     Q_OBJECT
-    Q_PLUGIN_METADATA(IID "scsharedlib/1.0" FILE "classifiers.json") //New Qt5 Plugin system replaces Q_EXPORT_PLUGIN2 macro
-    // Use the Q_INTERFACES() macro to tell Qt's meta-object system about the interfaces
-    Q_INTERFACES(SCSHAREDLIB::AbstractAlgorithm)
 
 public:
     //=================================================================================================================
     /**
-     * @brief Classifiers       Constructs a Classifiers.
+     * @brief DummySetupWidget      Constructs a DummySetupWidget which is a child of parent.
+     * @param [in] pDummy           A pointer to the corresponding Dummy.
+     * @param [in] sSettingsPath    QString providing path to save the settings.
+     * @param [in] parent           Pointer to parent widget;
+     *                              If parent is 0, the new DummySetupWidget becomes a window.
+     *                              If parent is another widget, DummySetupWidget becomes a child window inside parent.
+     *                              DummySetupWidget is deleted when its parent is deleted.
      */
-    Classifiers();
+    DummySetupWidget(Dummy *pDummy = 0, const QString &sSettingsPath = "", QWidget *parent = 0);
 
     //=================================================================================================================
     /**
-     * @brief ~Classifiers      Destroys the Classifiers.
+     * @brief ~DummySetupWidget     Destroys the DummySetupWidget.
+     *                              All DummySetupWidget's children are deleted first.
+     *                              The application exits if DummySetupWidget is the main widget.
      */
-    ~Classifiers();
+    ~DummySetupWidget();
+
+private:
+    //=================================================================================================================
+    /**
+     * @brief saveSettings      Saves all important settings of this view via QSettings.
+     */
+    void saveSettings();
 
     //=================================================================================================================
     /**
-     * @brief IAlgorithm functions
+     * @brief loadSettings      Loads and inits all important settings of this view via QSettings.
      */
-    virtual QSharedPointer<SCSHAREDLIB::AbstractPlugin> clone() const;
-    virtual void init();
-    virtual void unload();
-    virtual bool start();
-    virtual bool stop();
-    virtual SCSHAREDLIB::AbstractPlugin::PluginType getType() const;
-    virtual QString getName() const;
-    virtual QWidget* setupWidget();
-
-    //=================================================================================================================
-    /**
-     * @brief update                Updates the pugin with new (incoming) data.
-     * @param [in] pMeasurement     The incoming data in form of a generalized Measurement.
-     */
-    void update(SCMEASLIB::Measurement::SPtr pMeasurement);
-
-protected:
-    //=================================================================================================================
-    /**
-     * @brief Inits widgets which are used to control this plugin, then emits them in form of a QList.
-     */
-    virtual void initPluginControlWidgets();
-
-    //=================================================================================================================
-    /**
-     * @brief IAlgorithm function
-     */
-    virtual void run();
+    void loadSettings();
 
 public:
     //=================================================================================================================
     // Add your public method functions/members here.
-    //=================================================================================================================
-
     //=================================================================================================================
 
 private:
@@ -144,39 +124,16 @@ private:
     //=================================================================================================================
 
     //=================================================================================================================
-    // IAlgorithm members
-    FIFFLIB::FiffInfo::SPtr         m_pFiffInfo;                /**< Fiff measurement info.*/
-    QSharedPointer<UTILSLIB::CircularBuffer_Matrix_double>      m_pCircularBuffer;              /**< Holds incoming raw data. */
-    SCSHAREDLIB::PluginInputData<SCMEASLIB::RealTimeMultiSampleArray>::SPtr      m_pInput;      /**< The incoming data.*/
-    SCSHAREDLIB::PluginOutputData<SCMEASLIB::RealTimeMultiSampleArray>::SPtr     m_pOutput;     /**< The outgoing data.*/
-
-    QMutex              m_qMutex;
-    bool                m_bPluginControlWidgetsInit;
-
-    // parameters from ClassifiersSettingsView
-    bool                m_bChNumReset;
-    double              m_dDataSampFreq;
-    int                 m_iDataBufferSize;
-    int                 m_iNumPickedCh;
-    Eigen::RowVectorXi  m_vecEEGChPicks;            // index vector of EEG channels.
-    QStringList         m_sEEGChNames;
-    QStringList         m_sPickedChNames;
-
-    // parameters from ClassifiersSetupWidget
-
-    // parameters for classifiers
-    QString             m_sSettingsPath;            // settings path string for load/save parameters.
+    Dummy*                      m_pDummy;           /**< Holds a pointer to corresponding Dummy.*/
+    Ui::DummySetupWidget*       m_pUi;              /**< Holds the user interface for the DummySetupWidget.*/
+    QString                     m_sSettingsPath;    /**< The settings path to store the GUI settings to. */
 
 signals:
     //=================================================================================================================
     // Add your signals here.
     //=================================================================================================================
-    //=================================================================================================================
-    /**
-     * @brief Emitted when fiffInfo is available
-     */
-    void fiffInfoAvailable();
+
 };
 } // NAMESPACE
 
-#endif // CLASSIFIERS_H
+#endif // DUMMYSETUPWIDGET_H

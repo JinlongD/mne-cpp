@@ -1,6 +1,6 @@
 ﻿//=====================================================================================================================
 /**
- * @file     classifierssettingsview.cpp
+ * @file     dummy_global.h
  * @author   Christoph Dinh <chdinh@nmr.mgh.harvard.edu>;
  *           Lorenz Esch <lesch@mgh.harvard.edu>;
  *           Viktor Klueber <Viktor.Klueber@tu-ilmenau.de>
@@ -30,73 +30,26 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  *
- * @brief    Definition of the classifierssettingsview class.
+ * @brief    Contains dummy library export/import macros.
  *
  */
 //=====================================================================================================================
-
-//=====================================================================================================================
-// INCLUDES
-//=====================================================================================================================
-#include "classifierssettingsview.h"
-#include "ui_classifierssettingsview.h"
+#ifndef DUMMY_GLOBAL_H
+#define DUMMY_GLOBAL_H
 
 //=====================================================================================================================
 // QT INCLUDES
 //=====================================================================================================================
-#include <QSettings>
-#include <QDebug>
+#include <QtCore/qglobal.h>
 
 //=====================================================================================================================
-// EIGEN INCLUDES
+// PREPROCESSOR DEFINES
 //=====================================================================================================================
 
-//=====================================================================================================================
-// USED NAMESPACES
-//=====================================================================================================================
-using namespace CLASSIFIERSPLUGIN;
+#if defined(DUMMY_PLUGIN)
+#  define DUMMYSHARED_EXPORT Q_DECL_EXPORT    /**< Q_DECL_EXPORT must be added to the declarations of symbols used when compiling a shared library. */
+#else
+#  define DUMMYSHARED_EXPORT Q_DECL_IMPORT    /**< Q_DECL_IMPORT must be added to the declarations of symbols used when compiling a client that uses the shared library. */
+#endif
 
-//=====================================================================================================================
-// DEFINE MEMBER METHODS
-//=====================================================================================================================
-ClassifiersSettingsView::ClassifiersSettingsView(const QString& sSettingsPath, QWidget* parent)
-    : QWidget(parent)
-    , m_pUi(new Ui::ClassifiersSettingsView)
-    , m_sSettingsPath(sSettingsPath)
-{
-    m_pUi->setupUi(this);
-
-    loadSettings();
-}
-
-//=====================================================================================================================
-ClassifiersSettingsView::~ClassifiersSettingsView()
-{
-    saveSettings();
-
-    delete m_pUi;
-}
-
-//=====================================================================================================================
-void ClassifiersSettingsView::saveSettings()
-{
-    if(m_sSettingsPath.isEmpty()) {
-        return;
-    }
-
-    QSettings settings("MNECPP");
-
-    settings.setValue(m_sSettingsPath + QString("/valueName"), m_pUi->m_pDoubleSpinBox_dummy->value());
-}
-
-//=====================================================================================================================
-void ClassifiersSettingsView::loadSettings()
-{
-    if(m_sSettingsPath.isEmpty()) {
-        return;
-    }
-
-    QSettings settings("MNECPP");
-
-    m_pUi->m_pDoubleSpinBox_dummy->setValue(settings.value(m_sSettingsPath + QString("/valueName"), 10).toInt());
-}
+#endif // DUMMY_GLOBAL_H

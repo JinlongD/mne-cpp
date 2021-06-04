@@ -1,6 +1,6 @@
 ﻿//=====================================================================================================================
 /**
- * @file     classifierssettingsview.cpp
+ * @file     dummysetupwidget.cpp
  * @author   Christoph Dinh <chdinh@nmr.mgh.harvard.edu>;
  *           Lorenz Esch <lesch@mgh.harvard.edu>;
  *           Viktor Klueber <Viktor.Klueber@tu-ilmenau.de>
@@ -30,7 +30,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  *
- * @brief    Definition of the classifierssettingsview class.
+ * @brief    Definition of the dummysetupwidget class.
  *
  */
 //=====================================================================================================================
@@ -38,8 +38,10 @@
 //=====================================================================================================================
 // INCLUDES
 //=====================================================================================================================
-#include "classifierssettingsview.h"
-#include "ui_classifierssettingsview.h"
+#include "dummysetupwidget.h"
+#include "ui_dummysetupwidget.h"
+
+#include "dummy.h"
 
 //=====================================================================================================================
 // QT INCLUDES
@@ -48,55 +50,45 @@
 #include <QDebug>
 
 //=====================================================================================================================
-// EIGEN INCLUDES
-//=====================================================================================================================
-
-//=====================================================================================================================
 // USED NAMESPACES
 //=====================================================================================================================
-using namespace CLASSIFIERSPLUGIN;
+using namespace DUMMYPLUGIN;
 
 //=====================================================================================================================
 // DEFINE MEMBER METHODS
 //=====================================================================================================================
-ClassifiersSettingsView::ClassifiersSettingsView(const QString& sSettingsPath, QWidget* parent)
+DummySetupWidget::DummySetupWidget(Dummy* pdummy, const QString& sSettingsPath, QWidget* parent)
     : QWidget(parent)
-    , m_pUi(new Ui::ClassifiersSettingsView)
+    , m_pDummy(pdummy)
+    , m_pUi(new Ui::DummySetupWidget)
     , m_sSettingsPath(sSettingsPath)
 {
     m_pUi->setupUi(this);
-
-    loadSettings();
 }
 
 //=====================================================================================================================
-ClassifiersSettingsView::~ClassifiersSettingsView()
+DummySetupWidget::~DummySetupWidget()
 {
-    saveSettings();
-
-    delete m_pUi;
 }
 
 //=====================================================================================================================
-void ClassifiersSettingsView::saveSettings()
+void DummySetupWidget::saveSettings()
 {
     if(m_sSettingsPath.isEmpty()) {
         return;
     }
 
-    QSettings settings("MNECPP");
-
-    settings.setValue(m_sSettingsPath + QString("/valueName"), m_pUi->m_pDoubleSpinBox_dummy->value());
+    //QSettings settings("MNECPP");
+    //settings.setValue(m_sSettingsPath + QString("/valueName"), m_pUi->m_pDoubleSpinBox_dummy->value());
 }
 
 //=====================================================================================================================
-void ClassifiersSettingsView::loadSettings()
+void DummySetupWidget::loadSettings()
 {
     if(m_sSettingsPath.isEmpty()) {
         return;
     }
 
-    QSettings settings("MNECPP");
-
-    m_pUi->m_pDoubleSpinBox_dummy->setValue(settings.value(m_sSettingsPath + QString("/valueName"), 10).toInt());
+    //QSettings settings("MNECPP");
+    //m_pUi->m_pDoubleSpinBox_dummy->setValue(settings.value(m_sSettingsPath + QString("/valueName"), 10).toInt());
 }

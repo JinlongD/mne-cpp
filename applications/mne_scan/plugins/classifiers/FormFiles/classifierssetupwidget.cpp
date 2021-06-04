@@ -46,6 +46,7 @@
 //=====================================================================================================================
 // QT INCLUDES
 //=====================================================================================================================
+#include <QSettings>
 #include <QDebug>
 
 //=====================================================================================================================
@@ -56,10 +57,11 @@ using namespace CLASSIFIERSPLUGIN;
 //=====================================================================================================================
 // DEFINE MEMBER METHODS
 //=====================================================================================================================
-ClassifiersSetupWidget::ClassifiersSetupWidget(Classifiers* pclassifiers, QWidget *parent)
+ClassifiersSetupWidget::ClassifiersSetupWidget(Classifiers* pclassifiers, const QString& sSettingsPath, QWidget* parent)
     : QWidget(parent)
     , m_pClassifiers(pclassifiers)
     , m_pUi(new Ui::ClassifiersSetupWidget)
+    , m_sSettingsPath(sSettingsPath)
 {
     m_pUi->setupUi(this);
 }
@@ -67,4 +69,28 @@ ClassifiersSetupWidget::ClassifiersSetupWidget(Classifiers* pclassifiers, QWidge
 //=====================================================================================================================
 ClassifiersSetupWidget::~ClassifiersSetupWidget()
 {
+}
+
+//=====================================================================================================================
+void ClassifiersSetupWidget::saveSettings()
+{
+    if(m_sSettingsPath.isEmpty()) {
+        return;
+    }
+
+    QSettings settings("MNECPP");
+
+    //settings.setValue(m_sSettingsPath + QString("/valueName"), m_pUi->m_pDoubleSpinBox_dummy->value());
+}
+
+//=====================================================================================================================
+void ClassifiersSetupWidget::loadSettings()
+{
+    if(m_sSettingsPath.isEmpty()) {
+        return;
+    }
+
+    QSettings settings("MNECPP");
+
+    //m_pUi->m_pDoubleSpinBox_dummy->setValue(settings.value(m_sSettingsPath + QString("/valueName"), 10).toInt());
 }

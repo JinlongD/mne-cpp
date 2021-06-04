@@ -1,6 +1,6 @@
 ﻿//=====================================================================================================================
 /**
- * @file     classifiers.cpp
+ * @file     dummy.cpp
  * @author   Christoph Dinh <chdinh@nmr.mgh.harvard.edu>;
  *           Lorenz Esch <lesch@mgh.harvard.edu>;
  *           Viktor Klueber <Viktor.Klueber@tu-ilmenau.de>
@@ -30,7 +30,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  *
- * @brief    Definition of the classifiers class.
+ * @brief    Definition of the dummy class.
  *
  */
 //=====================================================================================================================
@@ -38,10 +38,10 @@
 //=====================================================================================================================
 // INCLUDES
 //=====================================================================================================================
-#include "classifiers.h"
+#include "dummy.h"
 
-#include "FormFiles/classifierssetupwidget.h"
-#include "FormFiles/classifierssettingsview.h"
+#include "FormFiles/dummysetupwidget.h"
+#include "FormFiles/dummysettingsview.h"
 
 #include <fiff/fiff.h>
 #include <fiff/fiff_constants.h>
@@ -49,8 +49,8 @@
 //=====================================================================================================================
 // QT INCLUDES
 //=====================================================================================================================
-#include <QDebug>
 #include <QSettings>
+#include <QDebug>
 
 //=====================================================================================================================
 // EIGEN INCLUDES
@@ -60,7 +60,7 @@
 //=====================================================================================================================
 // USED NAMESPACES
 //=====================================================================================================================
-using namespace CLASSIFIERSPLUGIN;
+using namespace DUMMYPLUGIN;
 using namespace SCSHAREDLIB;
 using namespace SCMEASLIB;
 using namespace UTILSLIB;
@@ -69,7 +69,7 @@ using namespace Eigen;
 //=====================================================================================================================
 // DEFINE MEMBER METHODS
 //=====================================================================================================================
-Classifiers::Classifiers()
+Dummy::Dummy()
     : m_pCircularBuffer(QSharedPointer<CircularBuffer_Matrix_double>(new CircularBuffer_Matrix_double(40)))
     , m_bChNumReset(false)
     , m_iNumPickedCh(1)
@@ -78,7 +78,7 @@ Classifiers::Classifiers()
 }
 
 //=====================================================================================================================
-Classifiers::~Classifiers()
+Dummy::~Dummy()
 {
     if(this->isRunning()) {
         stop();
@@ -86,35 +86,35 @@ Classifiers::~Classifiers()
 }
 
 //=====================================================================================================================
-QSharedPointer<AbstractPlugin> Classifiers::clone() const
+QSharedPointer<AbstractPlugin> Dummy::clone() const
 {
-    QSharedPointer<Classifiers> pClone(new Classifiers);
+    QSharedPointer<Dummy> pClone(new Dummy);
     return pClone;
 }
 
 //=====================================================================================================================
-void Classifiers::init()
+void Dummy::init()
 {
     // Input
-    m_pInput = PluginInputData<RealTimeMultiSampleArray>::create(this, "ClassifiersIn", "Classifiers input data");
+    m_pInput = PluginInputData<RealTimeMultiSampleArray>::create(this, "DummyIn", "Dummy input data");
     connect(m_pInput.data(), &PluginInputConnector::notify,
-            this, &Classifiers::update, Qt::DirectConnection);
+            this, &Dummy::update, Qt::DirectConnection);
     m_inputConnectors.append(m_pInput);
 
     // Output - Uncomment this if you don't want to send processed data (in form of a matrix) to other plugins.
     // Also, this output stream will generate an online display in your plugin
-    m_pOutput = PluginOutputData<RealTimeMultiSampleArray>::create(this, "ClassifiersOut", "Classifiers output data");
+    m_pOutput = PluginOutputData<RealTimeMultiSampleArray>::create(this, "DummyOut", "Dummy output data");
     m_pOutput->measurementData()->setName(this->getName());
     m_outputConnectors.append(m_pOutput);
 }
 
 //=====================================================================================================================
-void Classifiers::unload()
+void Dummy::unload()
 {
 }
 
 //=====================================================================================================================
-bool Classifiers::start()
+bool Dummy::start()
 {
     //Start thread
     QThread::start();
@@ -123,7 +123,7 @@ bool Classifiers::start()
 }
 
 //=====================================================================================================================
-bool Classifiers::stop()
+bool Dummy::stop()
 {
     requestInterruption();
     wait(500);
@@ -138,30 +138,31 @@ bool Classifiers::stop()
 }
 
 //=====================================================================================================================
-AbstractPlugin::PluginType Classifiers::getType() const
+AbstractPlugin::PluginType Dummy::getType() const
 {
     return _IAlgorithm;
 }
 
 //=====================================================================================================================
-QString Classifiers::getName() const
+QString Dummy::getName() const
 {
-    return "Classifiers";
+    return "Dummy";
 }
 
 //=====================================================================================================================
-QWidget* Classifiers::setupWidget()
+QWidget* Dummy::setupWidget()
 {
-    ClassifiersSetupWidget* pSetupWidget = new ClassifiersSetupWidget(this);
+    DummySetupWidget* pSetupWidget = new DummySetupWidget(this);
     return pSetupWidget;
 }
 
 //=====================================================================================================================
-void Classifiers::update(SCMEASLIB::Measurement::SPtr pMeasurement)
+void Dummy::update(SCMEASLIB::Measurement::SPtr pMeasurement)
 {
     if(QSharedPointer<RealTimeMultiSampleArray> pRTMSA = pMeasurement.dynamicCast<RealTimeMultiSampleArray>()) {
         //Fiff information
         if(!m_pFiffInfo) {
+            //m_pFiffInfo = FIFFLIB::FiffInfo::SPtr(new FIFFLIB::FiffInfo(*pRTMSA->info().data()));
             m_pFiffInfo = FIFFLIB::FiffInfo::SPtr::create();
             //m_pFiffInfo = pRTMSA->info();
 
@@ -185,7 +186,6 @@ void Classifiers::update(SCMEASLIB::Measurement::SPtr pMeasurement)
             fiffChInfo.unit     = 107; //pickedInfo.chs.at(0).unit;    // -1
 
             for (int i = 0; i < m_iNumPickedCh; ++i) {
-                //QString tempStr = QString("BP%1").arg(i);
                 fiffChInfo.ch_name = m_sEEGChNames.at(m_sPickedChNames.at(i).toInt()); // + QString("-BP");
                 chNameList.append(fiffChInfo.ch_name);
                 fiffChInfoList.append(fiffChInfo);
@@ -217,16 +217,20 @@ void Classifiers::update(SCMEASLIB::Measurement::SPtr pMeasurement)
 }
 
 //=====================================================================================================================
-void Classifiers::initPluginControlWidgets()
+void Dummy::initPluginControlWidgets()
 {
     if(m_pFiffInfo) {
         QList<QWidget*> plControlWidgets;
 
         // The plugin's control widget
-        ClassifiersSettingsView* pClassifiersSettingsView = new ClassifiersSettingsView(QString("MNESCAN/%1").arg(this->getName()));
-        pClassifiersSettingsView->setObjectName("group_tab_Settings_Your Widget");
+        DummySettingsView* pDummySettingsView = new DummySettingsView(QString("MNESCAN/%1").arg(this->getName()));
+        pDummySettingsView->setObjectName("group_tab_Settings_Your Widget");
+        connect(pDummySettingsView, &DummySettingsView::sig_addOneChannel,
+                this, &Dummy::onAddOneChannel);
+        connect(pDummySettingsView, &DummySettingsView::sig_deleteOneChannel,
+                this, &Dummy::onDeleteOneChannel);
 
-        plControlWidgets.append(pClassifiersSettingsView);
+        plControlWidgets.append(pDummySettingsView);
 
         emit pluginControlWidgetsChanged(plControlWidgets, this->getName());
 
@@ -235,7 +239,7 @@ void Classifiers::initPluginControlWidgets()
 }
 
 //=====================================================================================================================
-void Classifiers::run()
+void Dummy::run()
 {
     MatrixXd matDataInput;
     MatrixXd matDataOutput; //(m_iNumPickedCh, m_iDataBufferSize);
@@ -302,6 +306,23 @@ void Classifiers::run()
             //m_qMutex.unlock();
         }
         //=============================================================================================================
-    }
-    //=================================================================================================================
+    } // while(!isInterruptionRequested())
+}
+
+//=====================================================================================================================
+void Dummy::onAddOneChannel()
+{
+    m_qMutex.lock();
+    m_sPickedChNames.append(QString::number(m_iNumPickedCh));
+    m_bChNumReset = true;
+    m_qMutex.unlock();
+}
+
+//=====================================================================================================================
+void Dummy::onDeleteOneChannel()
+{
+    m_qMutex.lock();
+    m_sPickedChNames.removeLast();
+    m_bChNumReset = true;
+    m_qMutex.unlock();
 }
