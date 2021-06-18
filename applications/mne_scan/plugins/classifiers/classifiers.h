@@ -71,6 +71,52 @@ namespace CLASSIFIERSPLUGIN
 //=====================================================================================================================
 // CLASSIFIERSPLUGIN FORWARD DECLARATIONS
 //=====================================================================================================================
+class MatParser;
+
+//=====================================================================================================================
+/**
+ * @brief The paramLDA struct   parameters for Linear Discriminant Analysis (LDA) classifier.
+ */
+struct paramLDA {
+    Eigen::MatrixXd         matWeight;      // weight matrix (linear)
+    Eigen::VectorXd         vecBias;        // bias vector
+    QStringList             sClassNames;    // class names
+    qint32                  iClassNum;      // number of classes
+};
+
+//=====================================================================================================================
+/**
+ * @brief The paramFDA struct   parameters for Fisher's Discriminant Analysis (FDA) classifier.
+ */
+struct paramFDA {
+    Eigen::MatrixXd         matWeight;      // weight matrix
+    Eigen::MatrixXd         vecMeanProj;    // projected mean vectors (columns)
+    QStringList             sClassNames;    // class names
+    qint32                  iClassNum;      // number of classes
+};
+
+//=====================================================================================================================
+/**
+ * @brief The paramMD struct    parameters for Mahalanobis Distance (MD) based classifier.
+ */
+struct paramMD {
+    QList<Eigen::MatrixXd>  matCovariance;  // weight matrix
+    Eigen::MatrixXd         vecMean;        // mean vectors (columns)
+    QStringList             sClassNames;    // class names
+    qint32                  iClassNum;      // number of classes
+};
+
+//=====================================================================================================================
+/**
+ * @brief The paramQDA struct   parameters for Quadratic Discriminant Analysis (QDA) classifier.
+ */
+struct paramQDA {
+    QList<Eigen::MatrixXd>  matWeightQuad;  // quadratic weight matrix
+    Eigen::MatrixXd         matWeight;      // linear weight matrix
+    Eigen::VectorXd         vecBias;        // bias vector
+    QStringList             sClassNames;    // class names
+    qint32                  iClassNum;      // number of classes
+};
 
 //=====================================================================================================================
 /**
@@ -86,19 +132,19 @@ class CLASSIFIERSSHARED_EXPORT Classifiers : public SCSHAREDLIB::AbstractAlgorit
     Q_INTERFACES(SCSHAREDLIB::AbstractAlgorithm)
 
 public:
-    //=================================================================================================================
+    //=====================================================================================================================
     /**
      * @brief Classifiers       Constructs a Classifiers.
      */
     Classifiers();
 
-    //=================================================================================================================
+    //=====================================================================================================================
     /**
      * @brief ~Classifiers      Destroys the Classifiers.
      */
     ~Classifiers();
 
-    //=================================================================================================================
+    //=====================================================================================================================
     /**
      * @brief IAlgorithm functions
      */
@@ -111,39 +157,46 @@ public:
     virtual QString getName() const;
     virtual QWidget* setupWidget();
 
-    //=================================================================================================================
+    //=====================================================================================================================
     /**
      * @brief update                Updates the pugin with new (incoming) data.
      * @param [in] pMeasurement     The incoming data in form of a generalized Measurement.
      */
     void update(SCMEASLIB::Measurement::SPtr pMeasurement);
 
+    //=====================================================================================================================
+    /**
+     * @brief getMatParser
+     * @return
+     */
+    MatParser* getMatParser();
+
 protected:
-    //=================================================================================================================
+    //=====================================================================================================================
     /**
      * @brief Inits widgets which are used to control this plugin, then emits them in form of a QList.
      */
     virtual void initPluginControlWidgets();
 
-    //=================================================================================================================
+    //=====================================================================================================================
     /**
      * @brief IAlgorithm function
      */
     virtual void run();
 
 public:
-    //=================================================================================================================
+    //=====================================================================================================================
     // Add your public method functions/members here.
-    //=================================================================================================================
+    //=====================================================================================================================
 
-    //=================================================================================================================
+    //=====================================================================================================================
 
 private:
-    //=================================================================================================================
+    //=====================================================================================================================
     // Add your private method functions/members here.
-    //=================================================================================================================
+    //=====================================================================================================================
 
-    //=================================================================================================================
+    //=====================================================================================================================
     // IAlgorithm members
     FIFFLIB::FiffInfo::SPtr         m_pFiffInfo;                /**< Fiff measurement info.*/
     QSharedPointer<UTILSLIB::CircularBuffer_Matrix_double>      m_pCircularBuffer;              /**< Holds incoming raw data. */
@@ -163,15 +216,20 @@ private:
     QStringList         m_sPickedChNames;
 
     // parameters from ClassifiersSetupWidget
+    MatParser*          m_pMatParser;
+    paramFDA            m_classifierFDA;
+    paramLDA            m_classifierLDA;
+    paramQDA            m_classifierQDA;
+    paramMD             m_classifierMD;
 
     // parameters for classifiers
     QString             m_sSettingsPath;            // settings path string for load/save parameters.
 
 signals:
-    //=================================================================================================================
+    //=====================================================================================================================
     // Add your signals here.
-    //=================================================================================================================
-    //=================================================================================================================
+    //=====================================================================================================================
+    //=====================================================================================================================
     /**
      * @brief Emitted when fiffInfo is available
      */

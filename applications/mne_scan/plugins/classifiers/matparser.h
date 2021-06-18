@@ -41,19 +41,17 @@
 // INCLUDES
 //=====================================================================================================================
 #include "classifiers_global.h"
-#include <QThread>
 
 //=====================================================================================================================
 // QT INCLUDES
 //=====================================================================================================================
-#include <QtWidgets>
-#include <QtCore/QtPlugin>
+#include <QThread>
+#include <QMap>
 
 //=====================================================================================================================
 // EIGEN INCLUDES
 //=====================================================================================================================
-//#include <Eigen/Core>
-#include <Eigen/SparseCore>
+#include <Eigen/Core>
 
 //=====================================================================================================================
 // FORWARD DECLARATIONS
@@ -71,69 +69,6 @@ namespace CLASSIFIERSPLUGIN
 
 //=====================================================================================================================
 /**
- * @brief The ArrayFlags struct
- */
-struct ArrayFlags {
-    bool    bIsComplex = false;
-    bool    bIsGlobal = false;
-    bool    bIsLogical = false;
-    qint8   iClass = -1;
-    qint32  iNzMax = -1;
-};
-
-//=====================================================================================================================
-/**
- * @brief The NumericArray Data struct
- */
-struct DataNumericArray {
-    QString         sName;
-    bool            bIsComplex = false;
-    bool            bIsGlobal = false;
-    bool            bIsLogical = false;
-    QList<qint32>   iDimensions;
-    QList<Eigen::MatrixXd> matPR;  // real part
-    QList<Eigen::MatrixXd> matPI;  // imaginary part
-
-};
-
-//=====================================================================================================================
-/**
- * @brief The CharacterArray Data struct
- */
-struct DataCharacterArray {
-    QString         sName;
-    QList<qint32>   iDimensions;
-    QString         sCharacters;
-};
-
-//=====================================================================================================================
-/**
- * @brief The DataCellArray struct
- */
-struct DataCellArray {
-    QString             sName; // parent cell array name.
-    QList<qint32>       iDimensions;
-    QStringList         sCellNames; // names of all cells.
-    QStringList         sCellTypes; // types of all cells.
-    DataNumericArray    dataNumericArray;
-    DataCharacterArray  dataCharacterArray;
-};
-
-//=====================================================================================================================
-/**
- * @brief The DataStructure struct
- */
-struct DataStructure {
-    QString             sName;
-    QList<qint32>       iDimensions;
-    QStringList         sFieldNames; // names of all cells.
-    QStringList         sFieldTypes; // types of all cells.
-    DataNumericArray    dataNumericArray;
-    DataCharacterArray  dataCharacterArray;
-};
-
-//=====================================================================================================================
-/**
  * DECLARE CLASS MatParser
  *
  * @brief The MatParser class provides functionalities to parse MATLAB MAT-Format files.
@@ -148,7 +83,8 @@ public:
      * @param byteArray     original binary mat-file read in as ByteArray.
      * @param parent        parent.
      */
-    explicit MatParser(const QByteArray &byteArray = 0, QObject *parent = nullptr);
+    //explicit MatParser(const QByteArray &byteArray = 0, QObject *parent = nullptr);
+    explicit MatParser(QObject *parent = nullptr);
 
     //=====================================================================================================================
     /**
@@ -177,6 +113,33 @@ protected:
     void run() override;
 
 private:
+    //=====================================================================================================================
+    /**
+     * @brief The ArrayFlags struct
+     */
+    struct ArrayFlags {
+        bool    bIsComplex = false;
+        bool    bIsGlobal = false;
+        bool    bIsLogical = false;
+        qint8   iClass = -1;
+        qint32  iNzMax = -1;
+    };
+
+    //=====================================================================================================================
+    /**
+     * @brief The NumericArray Data struct
+     */
+    struct DataNumericArray {
+        QString         sName;
+        bool            bIsComplex = false;
+        bool            bIsGlobal = false;
+        bool            bIsLogical = false;
+        QList<qint32>   iDimensions;
+        QList<Eigen::MatrixXd> matPR;  // real part
+        QList<Eigen::MatrixXd> matPI;  // imaginary part
+
+    };
+
     //=====================================================================================================================
     /**
      * @brief initDataTypeMaps
@@ -231,19 +194,23 @@ private:
 
     //=====================================================================================================================
     QByteArray              m_qByteArray;
-    bool                    m_bIsParsed = false;
-    bool                    m_bIsLittleEndian = false;  // Endian Indicator, if true, byte-swaping is required.
+    bool                    m_bIsMatFileLoaded;
+    bool                    m_bIsParsed;
+    bool                    m_bIsLittleEndian;  // Endian Indicator, if true, byte-swaping is required.
     QString                 m_sDispDimensions;          // for display...
 
     typedef double (*pDECODERS) (const QByteArray &byteArray);  // define type: pointer to decoder functions (allocate one when needed)
     //double (*m_pDecoders) (const QByteArray &byteArray);        // or can directly declare a pointer to decoder functions.
     std::map<qint8, pDECODERS> m_mapDecoders;                   // using map (vector also works) to link DataType with Decoders.
 
-    QStringList                 m_lDataTypes;           // to store all data types.
-    QStringList                 m_lDataNames;           // to store all data names.
-    QList<DataCharacterArray>   m_lDataCharacterArray;  // to store all character arrays.
-    QList<DataNumericArray>     m_lDataNumericArray;    // to store all numeric arrays.
-    QList<DataCellArray>        m_lDataCellArray;       // to store all cell arrays.
+    // mat-data
+    QList<QByteArray>           m_lVariables;
+    QStringList                 m_lVarNames;
+    QStringList                 m_lVarTypes;
+
+    QStringList                 m_lFieldNames;
+    QStringList                 m_lFieldTypes;
+    QStringList                 m_l
 
     //=====================================================================================================================
     // constants
@@ -271,8 +238,8 @@ private:
     const qint8 miUTF32           = 0x012;    // 18 : Unicode UTF-32 Encoded Character Data
     QMap<qint8, qint8> m_mapSizeOfDataType;
 
-    // Flags:   3rd byte in Tag of Array Flags SubElement) (complex: 5th-bit, global: 6th-bit, logical: 7th-bit)
-    // Classes: 4th byte in Tag of Array Flags SubElement):
+    // Flags:   3rd byte in Tag of Array Flags SubElement (complex: 5th-bit, global: 6th-bit, logical: 7th-bit)
+    // Classes: 4th byte in Tag of Array Flags SubElement
     const qint8 mxCELL_CLASS      = 0x01;     // 1  : Cell array
     const qint8 mxSTRUCT_CLASS    = 0x02;     // 2  : Structure
     const qint8 mxOBJECT_CLASS    = 0x03;     // 3  : Object
@@ -289,7 +256,7 @@ private:
     const qint8 mxINT64_CLASS     = 0x0E;     // 14 : 64-bit, signed integer
     const qint8 mxUINT64_CLASS    = 0x0F;     // 15 : 64-bit, unsigned integer
 
-    // Decoder functions
+    // Decoder functions: using cast to convert binary data to desired formats.
     static inline double miINT8Decoder(const QByteArray &byteArray) {
         return *(qint8*)(byteArray.constData()); // using cast to convert int8 to double.
     }
@@ -320,6 +287,14 @@ private:
     static inline double miUINT64Decoder(const QByteArray &byteArray){
         return *(quint64*)(byteArray.constData());
     }
+
+signals:
+    //=====================================================================================================================
+    /**
+     * @brief sig_updateVariableInfo
+     * @param sVarInfo
+     */
+    void sig_updateVariableInfo(const QString &sVarInfo);
 };
 } // NAMESPACE
 

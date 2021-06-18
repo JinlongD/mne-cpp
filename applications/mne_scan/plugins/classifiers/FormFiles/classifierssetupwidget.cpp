@@ -41,11 +41,13 @@
 #include "classifierssetupwidget.h"
 #include "ui_classifierssetupwidget.h"
 
-#include "classifiers.h"
+#include "../classifiers.h"
+#include "../matparser.h"
 
 //=====================================================================================================================
 // QT INCLUDES
 //=====================================================================================================================
+#include <QtWidgets>
 #include <QSettings>
 #include <QDebug>
 
@@ -64,6 +66,20 @@ ClassifiersSetupWidget::ClassifiersSetupWidget(Classifiers* pclassifiers, const 
     , m_sSettingsPath(sSettingsPath)
 {
     m_pUi->setupUi(this);
+    connect(m_pUi->m_qPushButton_LoadClassifier, &QPushButton::clicked,
+            this, &ClassifiersSetupWidget::onPushbuttonLoadTrainedClassifier);
+    connect(m_pUi->m_qPushButton_LoadFeature, &QPushButton::clicked,
+            this, &ClassifiersSetupWidget::onPushbuttonLoadFeatureData);
+    connect(m_pUi->m_qPushButton_LoadRaw, &QPushButton::clicked,
+            this, &ClassifiersSetupWidget::onPushbuttonLoadRawData);
+    connect(m_pUi->m_qPushButton_TrainFeature, &QPushButton::clicked,
+            this, &ClassifiersSetupWidget::onPushbuttonTrainFromFeature);
+    connect(m_pUi->m_qPushButton_TrainRaw, &QPushButton::clicked,
+            this, &ClassifiersSetupWidget::onPushbuttonTrainFromRaw);
+
+    m_pMatParser = m_pClassifiers->getMatParser();
+    connect(m_pMatParser, &MatParser::sig_updateVariableInfo,
+            this, &ClassifiersSetupWidget::onUpdateVariableInfo);
 }
 
 //=====================================================================================================================
@@ -93,4 +109,211 @@ void ClassifiersSetupWidget::loadSettings()
     QSettings settings("MNECPP");
 
     //m_pUi->m_pDoubleSpinBox_dummy->setValue(settings.value(m_sSettingsPath + QString("/valueName"), 10).toInt());
+}
+
+//=====================================================================================================================
+void ClassifiersSetupWidget::onPushbuttonLoadTrainedClassifier()
+{
+    QString fileName = QFileDialog::getOpenFileName(this, tr("Load trained classifier"), "./MNE-sample-data",
+                                                    tr("All (*.*);; %1;; %2;; %3;; %4")
+                                                    .arg("Mat files (*.mat)")
+                                                    .arg("fiff raw (*.fiff)")
+                                                    .arg("Text files (*.txt)")
+                                                    .arg("Json files (*json)")
+                                                    .arg("XML files (*.xml)"),
+                                                    nullptr);
+    if (fileName.isEmpty()) {
+        return;
+    }
+
+    QFileInfo fileInfo(fileName);
+    QString fileExt = fileInfo.suffix();
+    if (fileExt == "mat") {
+        this->loadMatFile(fileName);
+    } else if (fileExt == "fiff") {
+        this->loadFiffRawFile(fileName);
+    } else if (fileExt == "txt") {
+        this->loadTextFile(fileName);
+    } else if (fileExt == "json") {
+        this->loadJsonFile(fileName);
+    } else if (fileExt == "xml") {
+        this->loadXmlFile(fileName);
+    } else {
+        QMessageBox::warning(nullptr, "Warning", "Invalid file type.", QMessageBox::Yes);
+        return;
+    }
+
+    m_pUi->m_qLabel_OpenedClassifier->setText(fileInfo.absoluteFilePath());
+}
+
+//=====================================================================================================================
+void ClassifiersSetupWidget::onPushbuttonLoadFeatureData()
+{
+    QString fileName = QFileDialog::getOpenFileName(this, tr("Load trained classifier"), "./MNE-sample-data",
+                                                    tr("All (*.*);; %1;; %2;; %3;; %4")
+                                                    .arg("Mat files (*.mat)")
+                                                    .arg("fiff raw (*.fiff)")
+                                                    .arg("Text files (*.txt)")
+                                                    .arg("Json files (*json)")
+                                                    .arg("XML files (*.xml)"),
+                                                    nullptr);
+    if (fileName.isEmpty()) {
+        return;
+    }
+
+    QFileInfo fileInfo(fileName);
+    QString fileExt = fileInfo.suffix();
+    if (fileExt == "mat") {
+        this->loadMatFile(fileName);
+    } else if (fileExt == "fiff") {
+        this->loadFiffRawFile(fileName);
+    } else if (fileExt == "txt") {
+        this->loadTextFile(fileName);
+    } else if (fileExt == "json") {
+        this->loadJsonFile(fileName);
+    } else if (fileExt == "xml") {
+        this->loadXmlFile(fileName);
+    } else {
+        QMessageBox::warning(nullptr, "Warning", "Invalid file type.", QMessageBox::Yes);
+        return;
+    }
+
+    m_pUi->m_qLabel_OpenedFeature->setText(fileInfo.absoluteFilePath());
+}
+
+
+//=====================================================================================================================
+void ClassifiersSetupWidget::onPushbuttonLoadRawData()
+{
+    QString fileName = QFileDialog::getOpenFileName(this, tr("Load trained classifier"), "./MNE-sample-data",
+                                                    tr("All (*.*);; %1;; %2;; %3;; %4")
+                                                    .arg("Mat files (*.mat)")
+                                                    .arg("fiff raw (*.fiff)")
+                                                    .arg("Text files (*.txt)")
+                                                    .arg("Json files (*json)")
+                                                    .arg("XML files (*.xml)"),
+                                                    nullptr);
+    if (fileName.isEmpty()) {
+        return;
+    }
+
+    QFileInfo fileInfo(fileName);
+    QString fileExt = fileInfo.suffix();
+    if (fileExt == "mat") {
+        this->loadMatFile(fileName);
+    } else if (fileExt == "fiff") {
+        this->loadFiffRawFile(fileName);
+    } else if (fileExt == "txt") {
+        this->loadTextFile(fileName);
+    } else if (fileExt == "json") {
+        this->loadJsonFile(fileName);
+    } else if (fileExt == "xml") {
+        this->loadXmlFile(fileName);
+    } else {
+        QMessageBox::warning(nullptr, "Warning", "Invalid file type.", QMessageBox::Yes);
+        return;
+    }
+
+    m_pUi->m_qLabel_OpenedRaw->setText(fileInfo.absoluteFilePath());
+}
+
+//=====================================================================================================================
+void ClassifiersSetupWidget::onPushbuttonTrainFromFeature()
+{
+
+}
+
+//=====================================================================================================================
+void ClassifiersSetupWidget::onPushbuttonTrainFromRaw()
+{
+
+}
+
+//=====================================================================================================================
+void ClassifiersSetupWidget::loadMatFile(const QString &fileName)
+{
+    QFile file(fileName);
+    if (!file.open(QFile::ReadOnly)) {
+        QMessageBox::warning(this, tr("Load MAT-File"),
+                             tr("Cannot read file %1:\n%2.")
+                             .arg(QDir::toNativeSeparators(fileName), file.errorString()));
+        return;
+    }
+
+    QByteArray byteArray = file.readAll();
+    file.close();
+
+    m_pMatParser->setMatFile(byteArray);
+    m_pMatParser->start();
+
+    /*connect(m_pMatParser, &MatParser::sig_updateVariableInfo,
+            this, &ClassifiersSetupWidget::onUpdateVariableInfo);
+
+    m_pMatParser->start();*/
+}
+
+//=====================================================================================================================
+void ClassifiersSetupWidget::loadFiffRawFile(const QString &fileName)
+{
+    QFile file(fileName);
+    if (!file.open(QFile::ReadOnly)) {
+        QMessageBox::warning(this, tr("Load Fiff Raw File"),
+                             tr("Cannot read file %1:\n%2.")
+                             .arg(QDir::toNativeSeparators(fileName), file.errorString()));
+        return;
+    }
+
+    QByteArray byteArray = file.readAll();
+    file.close();
+}
+
+//=====================================================================================================================
+void ClassifiersSetupWidget::loadTextFile(const QString &fileName)
+{
+    QFile file(fileName);
+    if (!file.open(QFile::ReadOnly)) {
+        QMessageBox::warning(this, tr("Load Text File"),
+                             tr("Cannot read file %1:\n%2.")
+                             .arg(QDir::toNativeSeparators(fileName), file.errorString()));
+        return;
+    }
+
+    QByteArray byteArray = file.readAll();
+    file.close();
+}
+
+//=====================================================================================================================
+void ClassifiersSetupWidget::loadJsonFile(const QString &fileName)
+{
+    QFile file(fileName);
+    if (!file.open(QFile::ReadOnly)) {
+        QMessageBox::warning(this, tr("Load Json File"),
+                             tr("Cannot read file %1:\n%2.")
+                             .arg(QDir::toNativeSeparators(fileName), file.errorString()));
+        return;
+    }
+
+    QByteArray byteArray = file.readAll();
+    file.close();
+}
+
+//=====================================================================================================================
+void ClassifiersSetupWidget::loadXmlFile(const QString &fileName)
+{
+    QFile file(fileName);
+    if (!file.open(QFile::ReadOnly)) {
+        QMessageBox::warning(this, tr("Load XML File"),
+                             tr("Cannot read file %1:\n%2.")
+                             .arg(QDir::toNativeSeparators(fileName), file.errorString()));
+        return;
+    }
+
+    QByteArray byteArray = file.readAll();
+    file.close();
+}
+
+//=====================================================================================================================
+void ClassifiersSetupWidget::onUpdateVariableInfo(const QString &sVarInfo)
+{
+    m_pUi->m_qTextBrowser_CurrentInfo->append(sVarInfo);
 }

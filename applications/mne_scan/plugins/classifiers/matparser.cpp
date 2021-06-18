@@ -58,9 +58,10 @@ using namespace CLASSIFIERSPLUGIN;
 //=====================================================================================================================
 // DEFINE MEMBER METHODS
 //=====================================================================================================================
-MatParser::MatParser(const QByteArray &byteArray, QObject *parent)
+MatParser::MatParser(QObject *parent)
     : QThread(parent)
-    , m_qByteArray(byteArray)
+    //, m_qByteArray(byteArray)
+    , m_bIsMatFileLoaded(false)
     , m_bIsParsed(false)
     , m_bIsLittleEndian(false)
 {
@@ -111,9 +112,10 @@ void MatParser::initDataTypeMaps()
 //=====================================================================================================================
 void MatParser::setMatFile(const QByteArray &byteArray)
 {
+    m_qByteArray = byteArray;
     m_bIsParsed = false;
     m_bIsLittleEndian = false;
-    m_qByteArray = byteArray;
+    m_bIsMatFileLoaded = true;
 }
 
 //=====================================================================================================================
@@ -123,7 +125,7 @@ bool MatParser::getParsingState()
 }
 
 //=====================================================================================================================
-ArrayFlags MatParser::getArrayFlags(QByteArray *byteArray, const bool &bIsLittleEndian)
+MatParser::ArrayFlags MatParser::getArrayFlags(QByteArray *byteArray, const bool &bIsLittleEndian)
 {
     /** Array Flags Sub-Element (Array Flags subelement is totally 16 bytes, no need to check Small Data Element Format.)
      *  Tag (Tag is fixed format):
@@ -419,30 +421,6 @@ QList<Eigen::MatrixXd> MatParser::getNumericArrayData(QByteArray *byteArray, con
         iNumOfBytes = byteTemp.toHex().toInt(nullptr, 16);  // get Number of Bytes from Tag field: numberOfValues * sizeOfDataType
         iNumOfData = iNumOfBytes/iSizeOfDataType;           // compute number of data values (numberOfValues);
 
-        /*
-         // Data (numeric array, using DataStream for decoding numeric array)
-         byteTemp = m_qByteArray.mid(*iposIndex, iNumOfBytes);
-        *iposIndex += iNumOfBytes;
-        QDataStream stream(byteTemp); // or using constructor: (&byteTemp, QIODevice::ReadOnly);
-        if (bIsLittleEndian) {
-            stream.setByteOrder(QDataStream::LittleEndian);
-        } else {
-            stream.setByteOrder(QDataStream::BigEndian);
-        }
-        stream.setFloatingPointPrecision(QDataStream::DoublePrecision);
-        qint16 temp; // decoding miINT16 (set temp as double, float, qint8, etc.. for decoding miDOUBLE, miSINGLE, miINT8, etc..)
-        qint32 iNumBase = iNumOfData/iBaseSize;
-        for (int i = 0; i < iNumBase; ++i) {
-            for (int icol = 0; icol < iDimensions.at(1); ++icol) {
-                for (int irow = 0; irow < iDimensions.at(0); ++irow) {
-                    stream >> temp;
-                    matBase(irow, icol) = temp;
-                    stream >> matBase(irow, icol);
-                }
-            }
-            matData.append(matBase);
-        }*/
-
         // Data (numeric array, using cast for decoding numeric array)
         qint32 iNumBase = iNumOfData/iBaseSize;
         pDECODERS pDecoder = m_mapDecoders[iDataType];
@@ -452,8 +430,7 @@ QList<Eigen::MatrixXd> MatParser::getNumericArrayData(QByteArray *byteArray, con
                     byteTemp = byteArray->left(iSizeOfDataType);
                     byteArray->remove(0, iSizeOfDataType);
                     // byte-swaping is not needed here.
-                    //matBase(irow, icol) = *(qint64*)(byteTemp.data()); // using cast to decode double numbers.
-                    matBase(irow, icol) = pDecoder(byteTemp); // using cast to numeric data.
+                    matBase(irow, icol) = pDecoder(byteTemp); // using cast to decode numeric data.
                 }
             }
             matData.append(matBase);
@@ -497,5 +474,221 @@ QList<Eigen::MatrixXd> MatParser::getNumericArrayData(QByteArray *byteArray, con
 //=====================================================================================================================
 void MatParser::run()
 {
+    /** Only compressed/uncompressed miMATRIX (MATLAB arrays) format is supported.
+     *
+     *  A MAT file is structured as:
+     *  Header, Data Element1, Data Element2, ..., repeat tagged data elements until end-of-file.
+     *
+     *  Each Data Element is a MATLAB variable, which is compressed individually.
+     */
 
+    QByteArray  byteArray = m_qByteArray; // make a copy of the original binary MAT-File.
+    QByteArray  byteMiMatrix; // byteArray for each variable.
+    QByteArray  byteTemp;
+
+    qint32      iDataType;          // data types for the Data Element of the mat-file.
+    qint32      iNumOfBytes;        // number of bytes for the Data Element of the mat-file.
+    bool        ok = false;
+
+    byteTemp = byteArray.left(128); // header (128 bytes: 124 bytes header text, 2 bytes Version, 2 bytes Endian Indicator
+    byteArray.remove(0, 128);
+    if (byteTemp.right(2) != ENDIAN_INDICATOR) {
+        m_bIsLittleEndian = true;
+    }
+
+    // one matlab variable is parsed during each while-loop
+    byteTemp = byteArray.left(4); // Data Type from the Tag field of Data Element
+    byteArray.remove(0, 4);
+    if (m_bIsLittleEndian) {
+        std::reverse(byteTemp.begin(), byteTemp.end());
+    }
+    iDataType = byteTemp.toHex().toInt(&ok, 16);
+
+    if (iDataType == miCOMPRESSED) {
+        byteTemp = byteArray.left(4); // NumberOfBytes from the Tag field of Data Element
+        //byteArray.remove(0, imaxSize); // remove later, NumberOfBytes is necessary for qUncompress.
+        if (m_bIsLittleEndian) {
+            std::reverse(byteTemp.begin(), byteTemp.end());
+        }
+        iNumOfBytes = byteTemp.toHex().toInt(&ok, 16);
+
+        byteMiMatrix = qUncompress(byteArray.left(iNumOfBytes+4)); // using NumberOfBytes and data subelement for uncompression.
+        byteArray.remove(0, iNumOfBytes+4);
+
+        byteTemp = byteMiMatrix.left(4); // Data Type from the Tag field of the uncompressed Data Element
+        byteMiMatrix.remove(0, 4);
+        if (m_bIsLittleEndian) {
+            std::reverse(byteTemp.begin(), byteTemp.end());
+        }
+        iDataType = byteTemp.toHex().toInt(&ok, 16);
+
+        if (iDataType != miMATRIX) {
+            emit sig_updateVariableInfo(tr("!Warning: Unsupported data type: %1. Parsing stopped (parsingMAT).").arg(iDataType));
+            return;
+        }
+        byteTemp = byteMiMatrix.left(4); // Number of Bytes from the Tag field of the uncompressed Data Element
+        byteMiMatrix.remove(0, 4);
+        if (m_bIsLittleEndian) {
+            std::reverse(byteTemp.begin(), byteTemp.end());
+        }
+        iNumOfBytes = byteTemp.toHex().toInt(&ok, 16);
+    } else if (iDataType == miMATRIX) {
+        byteTemp = byteArray.left(4);
+        byteArray.remove(0, 4);
+        if (m_bIsLittleEndian) {
+            std::reverse(byteTemp.begin(), byteTemp.end());
+        }
+        iNumOfBytes = byteTemp.toHex().toInt(&ok, 16);
+
+        byteMiMatrix = byteArray.left(iNumOfBytes); // miMATRIX Data
+        byteArray.remove(0, iNumOfBytes);
+    } else {
+        emit sig_updateVariableInfo(tr("!Warning: Unsupported data type: %1. Parsing stopped (parsingMAT).").arg(iDataType));
+        return;
+    }
+
+    // Dealing with miMATRIX Format Data Elements.
+    ArrayFlags aFlags = getArrayFlags(&byteMiMatrix, m_bIsLittleEndian);                // Array Flags Subelement
+    QList<qint32> aDimensions = getArrayDimensions(&byteMiMatrix, m_bIsLittleEndian);   // Dimensions Array Subelement
+    QString aName = getArrayName(&byteMiMatrix, m_bIsLittleEndian);                     // Array Name Subelement
+
+    if ((aFlags.iClass >= mxDOUBLE_CLASS) && (aFlags.iClass <= mxUINT64_CLASS)) {
+        // Numeric Array (6~15)
+        DataNumericArray strDataNumeric;
+        strDataNumeric.sName = aName;
+        strDataNumeric.bIsComplex = aFlags.bIsComplex;
+        strDataNumeric.bIsGlobal = aFlags.bIsGlobal;
+        strDataNumeric.bIsLogical = aFlags.bIsLogical;
+        strDataNumeric.iDimensions = aDimensions;
+        strDataNumeric.matPR = getNumericArrayData(&byteMiMatrix, m_bIsLittleEndian, aDimensions); // get real part (pr)
+
+        if (aFlags.bIsComplex) {
+            QList<Eigen::MatrixXd> m_dataPI;
+            strDataNumeric.matPI = getNumericArrayData(&byteMiMatrix, m_bIsLittleEndian, aDimensions); // get imaginary part (pi)
+        }
+        emit sig_updateVariableInfo(tr("Array Name: %1 (Numeric Array, Dimensions: %2, Complex: %3) (1: true; 0: false).")
+                                    .arg(aName)
+                                    .arg(m_sDispDimensions)
+                                    .arg(aFlags.bIsComplex));
+    } else if (aFlags.iClass == mxCELL_CLASS) {
+        // Cell Array (1)
+    } else if (aFlags.iClass == mxSTRUCT_CLASS) {
+        // Structure (2)
+        qDebug() << "struct flags:" << aFlags.bIsComplex << aFlags.bIsGlobal << aFlags.bIsLogical << aFlags.iClass << aFlags.iNzMax;
+        qDebug() << "variable name:" << aName << "dimensions:" << aDimensions;
+
+        // basically Field Name Length subelement should always be in small data format.
+        byteTemp = byteMiMatrix.left(4);
+        byteMiMatrix.remove(0, 4);
+        if (m_bIsLittleEndian) {
+            std::reverse(byteTemp.begin(), byteTemp.end());
+        }
+        qint32 iNum = byteTemp.left(2).toHex().toInt(&ok, 16);
+        iDataType = byteTemp.right(2).toHex().toInt(&ok, 16);
+        qint32 iFieldNameLen;
+        if (iNum != 0) {
+            // small data format
+            iNumOfBytes = iNum;
+            byteTemp = byteMiMatrix.left(4);
+            byteMiMatrix.remove(0, 4);
+            if (m_bIsLittleEndian) {
+                std::reverse(byteTemp.begin(), byteTemp.end());
+            }
+            iFieldNameLen = byteTemp.toHex().toInt(&ok, 16);
+            qDebug() << "small data format element";
+        } else {
+            // normal
+            byteTemp = byteMiMatrix.left(4);
+            byteMiMatrix.remove(0, 4);
+            if (m_bIsLittleEndian) {
+                std::reverse(byteTemp.begin(), byteTemp.end());
+            }
+            iNumOfBytes = byteTemp.toHex().toInt(&ok, 16);
+
+            byteTemp = byteMiMatrix.left(iNumOfBytes);
+            byteMiMatrix.remove(0, iNumOfBytes);
+            if (m_bIsLittleEndian) {
+                std::reverse(byteTemp.begin(), byteTemp.end());
+            }
+            iFieldNameLen = byteTemp.toHex().toInt(&ok, 16); // Maximum length of field names is 32 (31 characters and a NULL terminator;
+        }
+
+        qDebug() << "data type:" << iDataType << "number of bytes:" << iNumOfBytes << "field name length:" << iFieldNameLen;
+
+        // field name subelement
+        byteTemp = byteMiMatrix.left(4);
+        byteMiMatrix.remove(0, 4);
+        if (m_bIsLittleEndian) {
+            std::reverse(byteTemp.begin(), byteTemp.end());
+        }
+        iDataType = byteTemp.toHex().toInt(&ok, 16);
+
+        byteTemp = byteMiMatrix.left(4);
+        byteMiMatrix.remove(0, 4);
+        if (m_bIsLittleEndian) {
+            std::reverse(byteTemp.begin(), byteTemp.end());
+        }
+        iNumOfBytes = byteTemp.toHex().toInt(&ok, 16);
+        qint32 iNumOfFields = iNumOfBytes/iFieldNameLen;
+        qDebug() << "field names subelement: data type:" << iDataType << "number of bytes:" << iNumOfBytes
+                 << "number of fields:" << iNumOfFields;
+
+        for (int i = 0; i < iNumOfFields; ++i) {
+            byteTemp = byteMiMatrix.left(iFieldNameLen); // get field names
+            byteMiMatrix.remove(0, iFieldNameLen);
+            if (m_bIsLittleEndian) {
+                //std::reverse(byteTemp.begin(), byteTemp.end());
+            }
+            qDebug() << QString::fromLocal8Bit(byteTemp.constData()) << "\n";
+        }
+
+
+        // fields data
+        /*for (int i = 0; i < iNumOfFields; ++i) {
+                imaxSize = 4; // Tag: data type
+                byteTemp = byteMiMatrix.left(imaxSize);
+                byteMiMatrix.remove(0, imaxSize);
+                if (m_bIsLittleEndian) {
+                    std::reverse(byteTemp.begin(), byteTemp.end());
+                }
+                iDataType = byteTemp.toHex().toInt(&ok, 16);
+                imaxSize = 4; // Number of Bytes from the Tag field of Data Element
+                byteTemp = byteMiMatrix.left(imaxSize);
+                byteMiMatrix.remove(0, imaxSize);
+                if (m_bIsLittleEndian) {
+                    std::reverse(byteTemp.begin(), byteTemp.end());
+                }
+                iNumOfBytes = byteTemp.toHex().toInt(&ok, 16);
+                qDebug() << "field subelement: data type:" << iDataType << "number of bytes:" << iNumOfBytes;
+
+                aFlags = getArrayFlags(&byteMiMatrix, m_bIsLittleEndian);                // Array Flags Subelement
+                aDimensions = getArrayDimensions(&byteMiMatrix, m_bIsLittleEndian);   // Dimensions Array Subelement
+                aName = getArrayName(&byteMiMatrix, m_bIsLittleEndian);                     // Array Name Subelement
+                qDebug() << "struct flags:" << aFlags.bIsComplex << aFlags.bIsGlobal << aFlags.bIsLogical << aFlags.iClass << aFlags.iNzMax;
+                qDebug() << "variable name:" << aName << "dimensions:" << aDimensions;
+
+                QList<Eigen::MatrixXd> dataPR = getNumericArrayData(&byteMiMatrix, m_bIsLittleEndian, aDimensions);
+                for (int ii = 0; ii < dataPR.size(); ++ii) {
+                    std::cout << dataPR.at(ii) << std::endl;
+                }
+
+                if (aFlags.bIsComplex) {
+                    QList<Eigen::MatrixXd> dataPI = getNumericArrayData(&byteMiMatrix, m_bIsLittleEndian, aDimensions);
+                    for (int ii = 0; ii < dataPR.size(); ++ii) {
+                        std::cout << dataPI.at(ii) << std::endl;
+                    }
+                }
+            }*/
+
+    } else if (aFlags.iClass == mxOBJECT_CLASS) {
+        // Object (3)
+    } else if (aFlags.iClass == mxCHAR_CLASS) {
+        // Character Array 4
+    } else if (aFlags.iClass == mxSPARSE_CLASS) {
+        // Sparse Array (5)
+    } else {
+        emit sig_updateVariableInfo(tr("!Warning: Invalid array types (CLASS flag: %1). Parsing stopped (parsingMAT).")
+                                    .arg(aFlags.iClass));
+        return;
+    }
 }

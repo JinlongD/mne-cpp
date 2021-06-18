@@ -39,6 +39,7 @@
 // INCLUDES
 //=====================================================================================================================
 #include "classifiers.h"
+#include "matparser.h"
 
 #include "FormFiles/classifierssetupwidget.h"
 #include "FormFiles/classifierssettingsview.h"
@@ -74,6 +75,7 @@ Classifiers::Classifiers()
     , m_bChNumReset(false)
     , m_iNumPickedCh(1)
     , m_sPickedChNames({"0"})
+    , m_pMatParser(new MatParser(this))
 {
 }
 
@@ -304,4 +306,10 @@ void Classifiers::run()
         //=============================================================================================================
     }
     //=================================================================================================================
+}
+
+//=====================================================================================================================
+MatParser* Classifiers::getMatParser()
+{
+    return m_pMatParser;
 }

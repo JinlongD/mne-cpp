@@ -45,7 +45,6 @@
 // QT INCLUDES
 //=====================================================================================================================
 #include <QWidget>
-//#include <QtWidgets>
 
 //=====================================================================================================================
 // EIGEN INCLUDES
@@ -69,51 +68,7 @@ namespace CLASSIFIERSPLUGIN
 // CLASSIFIERSPLUGIN FORWARD DECLARATIONS
 //=====================================================================================================================
 class Classifiers;
-
-//=====================================================================================================================
-/**
- * @brief The paramLDA struct   parameters for Linear Discriminant Analysis (LDA) classifier.
- */
-struct paramLDA {
-    Eigen::MatrixXd         matWeight;      // weight matrix (linear)
-    Eigen::VectorXd         vecBias;        // bias vector
-    QStringList             sClassNames;    // class names
-    qint32                  iClassNum;      // number of classes
-};
-
-//=====================================================================================================================
-/**
- * @brief The paramFDA struct   parameters for Fisher's Discriminant Analysis (FDA) classifier.
- */
-struct paramFDA {
-    Eigen::MatrixXd         matWeight;      // weight matrix
-    Eigen::MatrixXd         vecMeanProj;    // projected mean vectors (columns)
-    QStringList             sClassNames;    // class names
-    qint32                  iClassNum;      // number of classes
-};
-
-//=====================================================================================================================
-/**
- * @brief The paramMD struct    parameters for Mahalanobis Distance (MD) based classifier.
- */
-struct paramMD {
-    QList<Eigen::MatrixXd>  matCovariance;  // weight matrix
-    Eigen::MatrixXd         vecMean;        // mean vectors (columns)
-    QStringList             sClassNames;    // class names
-    qint32                  iClassNum;      // number of classes
-};
-
-//=====================================================================================================================
-/**
- * @brief The paramQDA struct   parameters for Quadratic Discriminant Analysis (QDA) classifier.
- */
-struct paramQDA {
-    QList<Eigen::MatrixXd>  matWeightQuad;  // quadratic weight matrix
-    Eigen::MatrixXd         matWeight;      // linear weight matrix
-    Eigen::VectorXd         vecBias;        // bias vector
-    QStringList             sClassNames;    // class names
-    qint32                  iClassNum;      // number of classes
-};
+class MatParser;
 
 //=====================================================================================================================
 /**
@@ -192,6 +147,48 @@ public:
      */
     void onPushbuttonTrainFromRaw();
 
+    //=====================================================================================================================
+    /**
+     * @brief loadMatFile
+     * @param fileName
+     */
+    void loadMatFile(const QString &fileName);
+
+    //=====================================================================================================================
+    /**
+     * @brief loadFiffRawFile
+     * @param fineName
+     */
+    void loadFiffRawFile(const QString &fileName);
+
+    //=====================================================================================================================
+    /**
+     * @brief loadTextFile
+     * @param fileName
+     */
+    void loadTextFile(const QString &fileName);
+
+    //=====================================================================================================================
+    /**
+     * @brief loadJsonFile
+     * @param fileName
+     */
+    void loadJsonFile(const QString &fileName);
+
+    //=====================================================================================================================
+    /**
+     * @brief loadXmlFile
+     * @param fileName
+     */
+    void loadXmlFile(const QString &fileName);
+
+    //=====================================================================================================================
+    /**
+     * @brief onUpdateVariableInfo
+     * @param sVarInfo
+     */
+    void onUpdateVariableInfo(const QString &sVarInfo);
+
 private:
     //=================================================================================================================
     // Add your private method functions/members here.
@@ -199,20 +196,9 @@ private:
 
     //=================================================================================================================
     Classifiers*                    m_pClassifiers;     /**< Holds a pointer to corresponding Classifiers.*/
+    MatParser*                      m_pMatParser;       /**< Holds a pointer to corresponding mat-file parser. */
     Ui::ClassifiersSetupWidget*     m_pUi;              /**< Holds the user interface for the ClassifiersSetupWidget.*/
     QString                         m_sSettingsPath;    /**< The settings path to store the GUI settings to. */
-
-    bool            m_bIsTrainedClassifierInit;
-    qint8           m_iNumClassifiers;
-    qint8           m_iNumClasses;
-    qint32          m_iNumFeatureDimension;
-    QStringList     m_sClassifierNames;
-
-    // classifiers
-    paramFDA        m_classifierFDA;
-    paramLDA        m_classifierLDA;
-    paramQDA        m_classifierQDA;
-    paramMD         m_classifierMD;
 
 signals:
     //=================================================================================================================
