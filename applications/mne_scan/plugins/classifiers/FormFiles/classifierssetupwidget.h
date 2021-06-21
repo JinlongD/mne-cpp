@@ -49,7 +49,6 @@
 //=====================================================================================================================
 // EIGEN INCLUDES
 //=====================================================================================================================
-#include <Eigen/Core>
 
 //=====================================================================================================================
 // FORWARD DECLARATIONS
@@ -68,7 +67,6 @@ namespace CLASSIFIERSPLUGIN
 // CLASSIFIERSPLUGIN FORWARD DECLARATIONS
 //=====================================================================================================================
 class Classifiers;
-class MatParser;
 
 //=====================================================================================================================
 /**
@@ -91,7 +89,8 @@ public:
      *                                  If parent is another widget, ClassifiersSetupWidget becomes a child window inside parent.
      *                                  ClassifiersSetupWidget is deleted when its parent is deleted.
      */
-    ClassifiersSetupWidget(Classifiers *pClassifiers = 0, const QString &sSettingsPath = "", QWidget *parent = 0);
+    //ClassifiersSetupWidget(Classifiers *pClassifiers = 0, const QString &sSettingsPath = "", QWidget *parent = 0);
+    ClassifiersSetupWidget(Classifiers *pClassifiers = 0, QWidget *parent = 0);
 
     //=================================================================================================================
     /**
@@ -184,10 +183,10 @@ public:
 
     //=====================================================================================================================
     /**
-     * @brief onUpdateVariableInfo
+     * @brief onUpdateClassifiersInfo
      * @param sVarInfo
      */
-    void onUpdateVariableInfo(const QString &sVarInfo);
+    void onUpdateClassifiersInfo(const QString &info);
 
 private:
     //=================================================================================================================
@@ -196,7 +195,7 @@ private:
 
     //=================================================================================================================
     Classifiers*                    m_pClassifiers;     /**< Holds a pointer to corresponding Classifiers.*/
-    MatParser*                      m_pMatParser;       /**< Holds a pointer to corresponding mat-file parser. */
+    //MatParser*                      m_pMatParser;       /**< Holds a pointer to corresponding mat-file parser. */
     Ui::ClassifiersSetupWidget*     m_pUi;              /**< Holds the user interface for the ClassifiersSetupWidget.*/
     QString                         m_sSettingsPath;    /**< The settings path to store the GUI settings to. */
 

@@ -51,6 +51,7 @@
 //=====================================================================================================================
 #include <QtWidgets>
 #include <QtCore/QtPlugin>
+#include <QThread>
 
 //=====================================================================================================================
 // EIGEN INCLUDES
@@ -72,51 +73,6 @@ namespace CLASSIFIERSPLUGIN
 // CLASSIFIERSPLUGIN FORWARD DECLARATIONS
 //=====================================================================================================================
 class MatParser;
-
-//=====================================================================================================================
-/**
- * @brief The paramLDA struct   parameters for Linear Discriminant Analysis (LDA) classifier.
- */
-struct paramLDA {
-    Eigen::MatrixXd         matWeight;      // weight matrix (linear)
-    Eigen::VectorXd         vecBias;        // bias vector
-    QStringList             sClassNames;    // class names
-    qint32                  iClassNum;      // number of classes
-};
-
-//=====================================================================================================================
-/**
- * @brief The paramFDA struct   parameters for Fisher's Discriminant Analysis (FDA) classifier.
- */
-struct paramFDA {
-    Eigen::MatrixXd         matWeight;      // weight matrix
-    Eigen::MatrixXd         vecMeanProj;    // projected mean vectors (columns)
-    QStringList             sClassNames;    // class names
-    qint32                  iClassNum;      // number of classes
-};
-
-//=====================================================================================================================
-/**
- * @brief The paramMD struct    parameters for Mahalanobis Distance (MD) based classifier.
- */
-struct paramMD {
-    QList<Eigen::MatrixXd>  matCovariance;  // weight matrix
-    Eigen::MatrixXd         vecMean;        // mean vectors (columns)
-    QStringList             sClassNames;    // class names
-    qint32                  iClassNum;      // number of classes
-};
-
-//=====================================================================================================================
-/**
- * @brief The paramQDA struct   parameters for Quadratic Discriminant Analysis (QDA) classifier.
- */
-struct paramQDA {
-    QList<Eigen::MatrixXd>  matWeightQuad;  // quadratic weight matrix
-    Eigen::MatrixXd         matWeight;      // linear weight matrix
-    Eigen::VectorXd         vecBias;        // bias vector
-    QStringList             sClassNames;    // class names
-    qint32                  iClassNum;      // number of classes
-};
 
 //=====================================================================================================================
 /**
@@ -164,13 +120,6 @@ public:
      */
     void update(SCMEASLIB::Measurement::SPtr pMeasurement);
 
-    //=====================================================================================================================
-    /**
-     * @brief getMatParser
-     * @return
-     */
-    MatParser* getMatParser();
-
 protected:
     //=====================================================================================================================
     /**
@@ -184,18 +133,7 @@ protected:
      */
     virtual void run();
 
-public:
-    //=====================================================================================================================
-    // Add your public method functions/members here.
-    //=====================================================================================================================
-
-    //=====================================================================================================================
-
 private:
-    //=====================================================================================================================
-    // Add your private method functions/members here.
-    //=====================================================================================================================
-
     //=====================================================================================================================
     // IAlgorithm members
     FIFFLIB::FiffInfo::SPtr         m_pFiffInfo;                /**< Fiff measurement info.*/
@@ -205,35 +143,136 @@ private:
 
     QMutex              m_qMutex;
     bool                m_bPluginControlWidgetsInit;
+    QString             m_sSettingsPath;            // settings path string for load/save parameters.
 
+public:
+    //=====================================================================================================================
+    // Add your public method functions here.
+    //=====================================================================================================================
+    /**
+     * @brief setMatByteArray
+     * @param byteArray
+     */
+    void setMatByteArray(const QByteArray &byteArray);
+
+    //=====================================================================================================================
+    /**
+     * @brief parsingMat
+     */
+    void parsingMat();
+
+    //=====================================================================================================================
+    /**
+     * @brief onClassifiersChanged
+     * @param index
+     */
+    void onClassifiersChanged(int classifierIndex);
+
+    //=====================================================================================================================
+    /**
+     * @brief onTriggerThresholdChanged
+     * @param threshold
+     */
+    void onTriggerThresholdChanged(int triggerThreshold);
+
+    //=====================================================================================================================
+    /**
+     * @brief onTriggerClassChanged
+     * @param currentClass
+     */
+    void onTriggerClassChanged(int triggerClass);
+
+    //=====================================================================================================================
+    // Add your public members here.
+    //=====================================================================================================================
+    bool                m_bIsClassifiersInit;
+    QString             m_sClassifiersInfo;
+    QString             m_sFullFileName;
+
+private:
+    //=====================================================================================================================
+    // Add your private method functions here.
+    //=====================================================================================================================
+    /**
+     * @brief parsingIsFinished
+     */
+    void onIsParsingFinished();
+
+    //=====================================================================================================================
+    /**
+     * @brief predictLDA
+     * @param matFeature
+     * @return
+     */
+    inline bool predictLDA(const Eigen::MatrixXd &matFeature, const Eigen::MatrixXd &matWeight, const Eigen::MatrixXd &vecBias) {
+        Eigen::VectorXd vec;
+        Eigen::VectorXd::Index maxIndex;
+        vec = matWeight * matFeature + vecBias;
+        vec.maxCoeff(&maxIndex);
+        if (maxIndex != m_iTriggerClass) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    //=====================================================================================================================
+    /**
+     * @brief predictFDA
+     * @param matFeature
+     * @return
+     */
+    inline bool predictFDA(const Eigen::MatrixXd &matFeature, const Eigen::MatrixXd &matWeight,
+                           const Eigen::VectorXd &matMean, const qint32 &classNum) {
+        Eigen::VectorXd vec(classNum);
+        Eigen::VectorXd::Index minIndex;
+        Eigen::VectorXd vecProj = matWeight * matFeature; // Nc-by-1: (Nc-by-Nd) * (Nd-by-1)
+        Eigen::VectorXd vecTemp;
+        for (int i = 0; i < classNum; ++i) {
+            vecTemp = vecProj - matMean.col(i);
+            vec(i) = vecTemp.dot(vecTemp);
+        }
+        vec.minCoeff(&minIndex);
+        if (minIndex != m_iTriggerClass) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    //=====================================================================================================================
+    // Add your private members here.
+    //=====================================================================================================================
     // parameters from ClassifiersSettingsView
-    bool                m_bChNumReset;
-    double              m_dDataSampFreq;
-    int                 m_iDataBufferSize;
-    int                 m_iNumPickedCh;
-    Eigen::RowVectorXi  m_vecEEGChPicks;            // index vector of EEG channels.
-    QStringList         m_sEEGChNames;
-    QStringList         m_sPickedChNames;
+    qint8               m_iCurrentClassifier;
+    qint8               m_iTriggerThreshold;
+    int                 m_iTriggerClass;
+
 
     // parameters from ClassifiersSetupWidget
+    QThread*            m_pParserThread;
     MatParser*          m_pMatParser;
-    paramFDA            m_classifierFDA;
-    paramLDA            m_classifierLDA;
-    paramQDA            m_classifierQDA;
-    paramMD             m_classifierMD;
-
-    // parameters for classifiers
-    QString             m_sSettingsPath;            // settings path string for load/save parameters.
 
 signals:
     //=====================================================================================================================
     // Add your signals here.
     //=====================================================================================================================
-    //=====================================================================================================================
     /**
      * @brief Emitted when fiffInfo is available
      */
     void fiffInfoAvailable();
+
+    //=====================================================================================================================
+    /**
+     * @brief sig_getClassifiersFromMat
+     */
+    void sig_getClassifiersFromMat();
+
+    //=====================================================================================================================
+    /**
+     * @brief sig_updateClassifiersInfo
+     */
+    void sig_updateClassifiersInfo(const QString &info);
 };
 } // NAMESPACE
 

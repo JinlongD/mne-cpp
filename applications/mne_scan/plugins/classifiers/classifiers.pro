@@ -85,14 +85,14 @@ SOURCES += \
         classifiers.cpp \
         FormFiles/classifierssetupwidget.cpp \
         FormFiles/classifierssettingsview.cpp \
-        matparser.cpp
+        matparser.cpp \
 
 HEADERS += \
         classifiers.h\
         classifiers_global.h \
         FormFiles/classifierssetupwidget.h \
         FormFiles/classifierssettingsview.h \
-    matparser.h
+        matparser.h \
 
 FORMS += \
         FormFiles/classifierssetupwidget.ui \

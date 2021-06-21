@@ -59,12 +59,30 @@ using namespace CLASSIFIERSPLUGIN;
 //=====================================================================================================================
 // DEFINE MEMBER METHODS
 //=====================================================================================================================
-ClassifiersSettingsView::ClassifiersSettingsView(const QString& sSettingsPath, QWidget* parent)
+ClassifiersSettingsView::ClassifiersSettingsView(const QStringList &classifierNames, const QStringList &classNames,
+                                                 const int &threshold, const QString &sSettingsPath, QWidget *parent)
     : QWidget(parent)
     , m_pUi(new Ui::ClassifiersSettingsView)
     , m_sSettingsPath(sSettingsPath)
 {
     m_pUi->setupUi(this);
+
+    //m_pUi->m_qComboBox_Classifiers->clear();
+    m_pUi->m_qComboBox_Classifiers->addItems(classifierNames);
+    //m_pUi->m_qComboBox_Classifiers->setCurrentIndex(1);
+
+    //m_pUi->m_qComboBox_TriggerClass->clear();
+    m_pUi->m_qComboBox_TriggerClass->addItems(classNames);
+    //m_pUi->m_qComboBox_TriggerClass->setCurrentIndex(1);
+
+    m_pUi->m_qSpinBox_TriggerThreshold->setValue(threshold);
+
+    connect(m_pUi->m_qComboBox_Classifiers, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this, &ClassifiersSettingsView::onComboBoxClassifiersChanged);
+    connect(m_pUi->m_qSpinBox_TriggerThreshold, QOverload<int>::of(&QSpinBox::valueChanged),
+            this, &ClassifiersSettingsView::onSpinBoxTriggerThresholdChanged);
+    connect(m_pUi->m_qComboBox_TriggerClass, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this, &ClassifiersSettingsView::onComboBoxTriggerClassChanged);
 
     loadSettings();
 }
@@ -86,7 +104,9 @@ void ClassifiersSettingsView::saveSettings()
 
     QSettings settings("MNECPP");
 
-    settings.setValue(m_sSettingsPath + QString("/valueName"), m_pUi->m_pDoubleSpinBox_dummy->value());
+    settings.setValue(m_sSettingsPath + QString("/classifierIndex"), m_pUi->m_qComboBox_Classifiers->currentIndex());
+    settings.setValue(m_sSettingsPath + QString("/triggerThreshold"), m_pUi->m_qSpinBox_TriggerThreshold->value());
+    settings.setValue(m_sSettingsPath + QString("/triggerClass"), m_pUi->m_qComboBox_TriggerClass->currentIndex());
 }
 
 //=====================================================================================================================
@@ -98,5 +118,25 @@ void ClassifiersSettingsView::loadSettings()
 
     QSettings settings("MNECPP");
 
-    m_pUi->m_pDoubleSpinBox_dummy->setValue(settings.value(m_sSettingsPath + QString("/valueName"), 10).toInt());
+    m_pUi->m_qComboBox_Classifiers->setCurrentIndex(settings.value(m_sSettingsPath + QString("/classifierIndex"), 0).toInt());
+    m_pUi->m_qSpinBox_TriggerThreshold->setValue(settings.value(m_sSettingsPath + QString("/triggerThreshold"), 3).toInt());
+    m_pUi->m_qComboBox_TriggerClass->setCurrentIndex(settings.value(m_sSettingsPath + QString("/triggerClass"), 1).toInt());
+}
+
+//=====================================================================================================================
+void ClassifiersSettingsView::onComboBoxClassifiersChanged(int classifierIndex)
+{
+    emit sig_updateClassifiers(classifierIndex);
+}
+
+//=====================================================================================================================
+void ClassifiersSettingsView::onSpinBoxTriggerThresholdChanged(int triggerThreshold)
+{
+    emit sig_updateTriggerThreshold(triggerThreshold);
+}
+
+//=====================================================================================================================
+void ClassifiersSettingsView::onComboBoxTriggerClassChanged(int triggerClass)
+{
+    emit sig_updateTriggerClass(triggerClass);
 }

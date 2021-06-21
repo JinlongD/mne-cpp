@@ -34,18 +34,19 @@
  *
  */
 //=====================================================================================================================
+
 #ifndef MATPARSER_H
 #define MATPARSER_H
 
 //=====================================================================================================================
 // INCLUDES
 //=====================================================================================================================
-#include "classifiers_global.h"
+//#include "classifiers_global.h"
 
 //=====================================================================================================================
 // QT INCLUDES
 //=====================================================================================================================
-#include <QThread>
+#include <QObject>
 #include <QMap>
 
 //=====================================================================================================================
@@ -69,11 +70,64 @@ namespace CLASSIFIERSPLUGIN
 
 //=====================================================================================================================
 /**
+ * @brief The paramLDA struct   parameters for Linear Discriminant Analysis (LDA) classifier.
+ */
+struct paramLDA {
+    Eigen::MatrixXd         matWeight;      // weight matrix (linear)
+    Eigen::VectorXd         vecBias;        // bias vector
+    QStringList             sClassNames;    // class names
+    qint32                  iClassNum;      // number of classes
+    qint32                  iFeatureNum;    // number of features
+    double                  dCVAccuracy;    // cross-validation accuracy
+};
+
+//=====================================================================================================================
+/**
+ * @brief The paramFDA struct   parameters for Fisher's Discriminant Analysis (FDA) classifier.
+ */
+struct paramFDA {
+    Eigen::MatrixXd         matWeight;      // weight matrix
+    Eigen::MatrixXd         vecMeanProj;    // projected mean vectors (columns)
+    QStringList             sClassNames;    // class names
+    qint32                  iClassNum;      // number of classes
+    qint32                  iFeatureNum;    // number of features
+    double                  dCVAccuracy;    // cross-validation accuracy
+};
+
+//=====================================================================================================================
+/**
+ * @brief The paramMD struct    parameters for Mahalanobis Distance (MD) based classifier.
+ */
+struct paramMD {
+    QList<Eigen::MatrixXd>  matCovariance;  // weight matrix
+    Eigen::MatrixXd         vecMean;        // mean vectors (columns)
+    QStringList             sClassNames;    // class names
+    qint32                  iClassNum;      // number of classes
+    qint32                  iFeatureNum;    // number of features
+    double                  dCVAccuracy;    // cross-validation accuracy
+};
+
+//=====================================================================================================================
+/**
+ * @brief The paramQDA struct   parameters for Quadratic Discriminant Analysis (QDA) classifier.
+ */
+struct paramQDA {
+    QList<Eigen::MatrixXd>  matWeightQuad;  // quadratic weight matrix
+    Eigen::MatrixXd         matWeight;      // linear weight matrix
+    Eigen::VectorXd         vecBias;        // bias vector
+    QStringList             sClassNames;    // class names
+    qint32                  iClassNum;      // number of classes
+    qint32                  iFeatureNum;    // number of features
+    double                  dCVAccuracy;    // cross-validation accuracy
+};
+
+//=====================================================================================================================
+/**
  * DECLARE CLASS MatParser
  *
  * @brief The MatParser class provides functionalities to parse MATLAB MAT-Format files.
  */
-class MatParser : public QThread
+class MatParser : public QObject
 {
     Q_OBJECT
 public:
@@ -83,14 +137,8 @@ public:
      * @param byteArray     original binary mat-file read in as ByteArray.
      * @param parent        parent.
      */
-    //explicit MatParser(const QByteArray &byteArray = 0, QObject *parent = nullptr);
-    explicit MatParser(QObject *parent = nullptr);
-
-    //=====================================================================================================================
-    /**
-     * @brief ~MatParser    destructs the MatParser.
-     */
-    ~MatParser();
+    //explicit MatParser(const QByteArray &byteArray = 0, QObject *parent = 0);
+    explicit MatParser(QObject *parent = 0);
 
     //=====================================================================================================================
     /**
@@ -101,16 +149,18 @@ public:
 
     //=====================================================================================================================
     /**
-     * @brief getParsingState   get the parsing state
-     * @return bool             return true if the mat-file has already parsed.
+     * @brief getClassifiers
      */
-    bool getParsingState();
+    void getClassifiers();
 
-protected:
-    /**
-     * @brief run   do the assigned works in this thread.
-     */
-    void run() override;
+    //=====================================================================================================================
+    paramLDA            m_classifierLDA;
+    paramFDA            m_classifierFDA;
+    paramMD             m_classifierMD;
+    paramQDA            m_classifierQDA;
+    QStringList         m_sClassifierNames;
+    QStringList         m_sClassNames;
+    qint32              m_iFeatureNum;
 
 private:
     //=====================================================================================================================
@@ -153,7 +203,7 @@ private:
      * @param bIsLittleEndian   Endian indicator, true if the binary file is in Little Endian.
      * @return ArryFlags        structured data of Array Flags Subelement.
      */
-    ArrayFlags getArrayFlags(QByteArray *byteArray, const bool &bIsLittleEndian);
+    ArrayFlags getArrayFlags(qint64 *iposIndex, const bool &bIsLittleEndian);
 
     //=====================================================================================================================
     /**
@@ -162,7 +212,7 @@ private:
      * @param bIsLittleEndian       Endian indicator, true if the binary file is in Little Endian.
      * @return dimensions           a list of dimensions of the miMATRIX subelement.
      */
-    QList<qint32> getArrayDimensions(QByteArray *byteArray, const bool &bIsLittleEndian);
+    QList<qint32> getArrayDimensions(qint64 *iposIndex, const bool &bIsLittleEndian);
 
     //=====================================================================================================================
     /**
@@ -171,7 +221,7 @@ private:
      * @param bIsLittleEndian       Endian indicator, true if the binary file is in Little Endian.
      * @return array name           name of the current miMATRIX subelement.
      */
-    QString getArrayName(QByteArray *byteArray, const bool &bIsLittleEndian);
+    QString getArrayName(qint64 *iposIndex, const bool &bIsLittleEndian);
 
     //=====================================================================================================================
     /**
@@ -180,7 +230,7 @@ private:
      * @param bIsLittleEndian       Endian indicator, true if the binary file is in Little Endian.
      * @return QString              save the character array as a string.
      */
-    QString getCharacterArrayData(QByteArray *byteArray, const bool &bIsLittleEndian);
+    QString getCharacterArrayData(qint64 *iposIndex, const bool &bIsLittleEndian);
 
     //=====================================================================================================================
     /**
@@ -190,29 +240,58 @@ private:
      * @param iDimensions           dimensions of the current subelement.
      * @return list of matrices     a list of Eigen matrices.
      */
-    QList<Eigen::MatrixXd> getNumericArrayData(QByteArray *byteArray, const bool &bIsLittleEndian, const QList<qint32> &iDimensions);
+    QList<Eigen::MatrixXd> getNumericArrayData(qint64 *iposIndex, const bool &bIsLittleEndian, const QList<qint32> &iDimensions);
+
+    //=====================================================================================================================
+    /**
+     * @brief getFieldNames
+     * @param iposIndex
+     * @param bIsLittleEndian
+     * @return
+     */
+    QStringList getFieldNames(qint64 *iposIndex, const bool &bIsLittleEndian);
+
+    //=====================================================================================================================
+    // Decoder functions: using cast to convert binary data to desired formats.
+    typedef double (*pDECODERS) (const QByteArray &byteArray);  // define type: pointer to decoder functions (allocate one when needed)
+    //double (*pDECODERS) (const QByteArray &byteArray);        // or can directly declare a pointer to decoder functions.
+    std::map<qint8, pDECODERS> m_mapDecoders;                   // using map (vector also works) to link DataType with Decoders.
+
+    static inline double miINT8Decoder(const QByteArray &byteArray) {
+        return *(qint8*)(byteArray.constData()); // using cast to convert int8 to double.
+    }
+    static inline double miUINT8Decoder(const QByteArray &byteArray) {
+        return *(quint8*)(byteArray.constData());
+    }
+    static inline double miINT16Decoder(const QByteArray &byteArray){
+        return *(qint16*)(byteArray.constData());
+    }
+    static inline double miUINT16Decoder(const QByteArray &byteArray){
+        return *(quint16*)(byteArray.constData());
+    }
+    static inline double miINT32Decoder(const QByteArray &byteArray){
+        return *(qint32*)(byteArray.constData());
+    }
+    static inline double miUINT32Decoder(const QByteArray &byteArray){
+        return *(quint32*)(byteArray.constData());
+    }
+    static inline double miDOUBLEDecoder(const QByteArray &byteArray){
+        return *(double*)(byteArray.constData());
+    }
+    static inline double miSINGLEDecoder(const QByteArray &byteArray){
+        return *(float*)(byteArray.constData());
+    }
+    static inline double miINT64Decoder(const QByteArray &byteArray){
+        return *(qint64*)(byteArray.constData());
+    }
+    static inline double miUINT64Decoder(const QByteArray &byteArray){
+        return *(quint64*)(byteArray.constData());
+    }
 
     //=====================================================================================================================
     QByteArray              m_qByteArray;
-    bool                    m_bIsMatFileLoaded;
-    bool                    m_bIsParsed;
     bool                    m_bIsLittleEndian;  // Endian Indicator, if true, byte-swaping is required.
-    QString                 m_sDispDimensions;          // for display...
 
-    typedef double (*pDECODERS) (const QByteArray &byteArray);  // define type: pointer to decoder functions (allocate one when needed)
-    //double (*m_pDecoders) (const QByteArray &byteArray);        // or can directly declare a pointer to decoder functions.
-    std::map<qint8, pDECODERS> m_mapDecoders;                   // using map (vector also works) to link DataType with Decoders.
-
-    // mat-data
-    QList<QByteArray>           m_lVariables;
-    QStringList                 m_lVarNames;
-    QStringList                 m_lVarTypes;
-
-    QStringList                 m_lFieldNames;
-    QStringList                 m_lFieldTypes;
-    QStringList                 m_l
-
-    //=====================================================================================================================
     // constants
     const qint16 MAT_VERSION       = 0x0100;    // Header flag field: Version
     const QByteArray ENDIAN_INDICATOR = "MI";   // big-endian; If "IM", little-endian is used and byte-swaping is required.
@@ -255,46 +334,19 @@ private:
     const qint8 mxUINT32_CLASS    = 0x0D;     // 13 : 32-bit, unsigned integer
     const qint8 mxINT64_CLASS     = 0x0E;     // 14 : 64-bit, signed integer
     const qint8 mxUINT64_CLASS    = 0x0F;     // 15 : 64-bit, unsigned integer
-
-    // Decoder functions: using cast to convert binary data to desired formats.
-    static inline double miINT8Decoder(const QByteArray &byteArray) {
-        return *(qint8*)(byteArray.constData()); // using cast to convert int8 to double.
-    }
-    static inline double miUINT8Decoder(const QByteArray &byteArray) {
-        return *(quint8*)(byteArray.constData());
-    }
-    static inline double miINT16Decoder(const QByteArray &byteArray){
-        return *(qint16*)(byteArray.constData());
-    }
-    static inline double miUINT16Decoder(const QByteArray &byteArray){
-        return *(quint16*)(byteArray.constData());
-    }
-    static inline double miINT32Decoder(const QByteArray &byteArray){
-        return *(qint32*)(byteArray.constData());
-    }
-    static inline double miUINT32Decoder(const QByteArray &byteArray){
-        return *(quint32*)(byteArray.constData());
-    }
-    static inline double miDOUBLEDecoder(const QByteArray &byteArray){
-        return *(double*)(byteArray.constData());
-    }
-    static inline double miSINGLEDecoder(const QByteArray &byteArray){
-        return *(float*)(byteArray.constData());
-    }
-    static inline double miINT64Decoder(const QByteArray &byteArray){
-        return *(qint64*)(byteArray.constData());
-    }
-    static inline double miUINT64Decoder(const QByteArray &byteArray){
-        return *(quint64*)(byteArray.constData());
-    }
-
 signals:
     //=====================================================================================================================
     /**
      * @brief sig_updateVariableInfo
      * @param sVarInfo
      */
-    void sig_updateVariableInfo(const QString &sVarInfo);
+    void sig_updateParsingInfo(const QString &sVarInfo);
+
+    //=====================================================================================================================
+    /**
+     * @brief sig_isParsingFinished
+     */
+    void sig_isParsingFinished();
 };
 } // NAMESPACE
 

@@ -459,6 +459,7 @@ void Bandpower::run()
     for (int i = 0; i <= m_iSegmentLength/m_iDataBufferSize; ++i) {
         while (!m_pBandpowerBuffer->pop(matDataInput));
         for (int j = 0; j < m_iNumPickedChannels; ++j) {
+            matDataInput *= 1.0e6;
             matTempSeg.block(j, i*m_iDataBufferSize, 1, m_iDataBufferSize) = matDataInput.row(m_vecEEGChPicks(m_sPickedChNames.at(j).toInt()));
         }
     }
@@ -539,6 +540,7 @@ void Bandpower::run()
                         MatrixXd tempDataInput(m_iNumPickedChannels, m_iDataBufferSize);
                         while(!m_pBandpowerBuffer->pop(matDataInput));
                         for (int i = 0; i < m_iNumPickedChannels; ++i) {
+                            matDataInput *= 1.0e6;
                             tempDataInput.row(i) = matDataInput.row(m_vecEEGChPicks(m_sPickedChNames.at(i).toInt()));
                         }
                         temp << matTemp, tempDataInput;
@@ -599,6 +601,7 @@ void Bandpower::run()
                     MatrixXd    matTempSeg(m_iNumPickedChannels, (m_iSegmentLength/m_iDataBufferSize + 1)*m_iDataBufferSize);
                     for (int i = 0; i <= m_iSegmentLength/m_iDataBufferSize; ++i) {
                         while (!m_pBandpowerBuffer->pop(matDataInput));
+                        matDataInput *= 1.0e6;
                         for (int j = 0; j < m_iNumPickedChannels; ++j) {
                             matTempSeg.block(j, i*m_iDataBufferSize, 1, m_iDataBufferSize) = matDataInput.row(m_vecEEGChPicks(m_sPickedChNames.at(j).toInt()));
                         }

@@ -42,7 +42,6 @@
 #include "ui_classifierssetupwidget.h"
 
 #include "../classifiers.h"
-#include "../matparser.h"
 
 //=====================================================================================================================
 // QT INCLUDES
@@ -59,11 +58,11 @@ using namespace CLASSIFIERSPLUGIN;
 //=====================================================================================================================
 // DEFINE MEMBER METHODS
 //=====================================================================================================================
-ClassifiersSetupWidget::ClassifiersSetupWidget(Classifiers* pclassifiers, const QString& sSettingsPath, QWidget* parent)
+ClassifiersSetupWidget::ClassifiersSetupWidget(Classifiers* pclassifiers, QWidget* parent)
     : QWidget(parent)
     , m_pClassifiers(pclassifiers)
     , m_pUi(new Ui::ClassifiersSetupWidget)
-    , m_sSettingsPath(sSettingsPath)
+    //, m_sSettingsPath(sSettingsPath)
 {
     m_pUi->setupUi(this);
     connect(m_pUi->m_qPushButton_LoadClassifier, &QPushButton::clicked,
@@ -77,9 +76,13 @@ ClassifiersSetupWidget::ClassifiersSetupWidget(Classifiers* pclassifiers, const 
     connect(m_pUi->m_qPushButton_TrainRaw, &QPushButton::clicked,
             this, &ClassifiersSetupWidget::onPushbuttonTrainFromRaw);
 
-    m_pMatParser = m_pClassifiers->getMatParser();
-    connect(m_pMatParser, &MatParser::sig_updateVariableInfo,
-            this, &ClassifiersSetupWidget::onUpdateVariableInfo);
+    connect(m_pClassifiers, &Classifiers::sig_updateClassifiersInfo,
+            this, &ClassifiersSetupWidget::onUpdateClassifiersInfo);
+
+    if (m_pClassifiers->m_bIsClassifiersInit) {
+        m_pUi->m_qLabel_OpenedClassifier->setText(m_pClassifiers->m_sFullFileName);
+        m_pUi->m_qTextBrowser_ClassifiersInfo->setPlainText(m_pClassifiers->m_sClassifiersInfo);
+    }
 }
 
 //=====================================================================================================================
@@ -115,7 +118,7 @@ void ClassifiersSetupWidget::loadSettings()
 void ClassifiersSetupWidget::onPushbuttonLoadTrainedClassifier()
 {
     QString fileName = QFileDialog::getOpenFileName(this, tr("Load trained classifier"), "./MNE-sample-data",
-                                                    tr("All (*.*);; %1;; %2;; %3;; %4")
+                                                    tr("All (*.*);; %1;; %2;; %3;; %4;; %5")
                                                     .arg("Mat files (*.mat)")
                                                     .arg("fiff raw (*.fiff)")
                                                     .arg("Text files (*.txt)")
@@ -144,6 +147,7 @@ void ClassifiersSetupWidget::onPushbuttonLoadTrainedClassifier()
     }
 
     m_pUi->m_qLabel_OpenedClassifier->setText(fileInfo.absoluteFilePath());
+    m_pClassifiers->m_sFullFileName = fileInfo.absoluteFilePath();
 }
 
 //=====================================================================================================================
@@ -243,13 +247,11 @@ void ClassifiersSetupWidget::loadMatFile(const QString &fileName)
     QByteArray byteArray = file.readAll();
     file.close();
 
-    m_pMatParser->setMatFile(byteArray);
-    m_pMatParser->start();
+    m_pClassifiers->setMatByteArray(byteArray);
+    m_pClassifiers->parsingMat();
 
     /*connect(m_pMatParser, &MatParser::sig_updateVariableInfo,
-            this, &ClassifiersSetupWidget::onUpdateVariableInfo);
-
-    m_pMatParser->start();*/
+            this, &ClassifiersSetupWidget::onUpdateVariableInfo);*/
 }
 
 //=====================================================================================================================
@@ -313,7 +315,9 @@ void ClassifiersSetupWidget::loadXmlFile(const QString &fileName)
 }
 
 //=====================================================================================================================
-void ClassifiersSetupWidget::onUpdateVariableInfo(const QString &sVarInfo)
+void ClassifiersSetupWidget::onUpdateClassifiersInfo(const QString &info)
 {
-    m_pUi->m_qTextBrowser_CurrentInfo->append(sVarInfo);
+    m_pUi->m_qTextBrowser_ClassifiersInfo->append(info);
 }
+
+

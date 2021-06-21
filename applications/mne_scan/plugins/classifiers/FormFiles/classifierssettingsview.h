@@ -81,7 +81,7 @@ public:
     typedef QSharedPointer<ClassifiersSettingsView> SPtr;               /**< Shared pointer type for ClassifiersSettingsView. */
     typedef QSharedPointer<const ClassifiersSettingsView> ConstSPtr;    /**< Const shared pointer type for ClassifiersSettingsView. */
 
-    //=================================================================================================================
+    //=====================================================================================================================
     /**
      * @brief ClassifiersSettingsView   Constructs a ClassifiersSettingsView.
      * @param [in] sSettingsPath        QString providing path to save the settings.
@@ -90,9 +90,10 @@ public:
      *                                  If parent is another widget, ClassifiersSettingsView becomes a child window inside parent.
      *                                  ClassifiersSettingsView is deleted when its parent is deleted.
      */
-    explicit ClassifiersSettingsView(const QString &sSettingsPath = "", QWidget *parent = 0);
+    explicit ClassifiersSettingsView(const QStringList &classifierNames = {}, const QStringList &classNames = {},
+                                     const int &threshold = 0, const QString &sSettingsPath = "", QWidget *parent = 0);
 
-    //=================================================================================================================
+    //=====================================================================================================================
     /**
      * @brief ~ClassifiersSettingsView  Destroys the ClassifiersSettingsView.
      *                                  All ClassifiersSetupWidget's children are deleted first.
@@ -101,40 +102,73 @@ public:
     ~ClassifiersSettingsView();
 
 private:
-    //=================================================================================================================
+    //=====================================================================================================================
     /**
      * @brief saveSettings      Saves all important settings of this view via QSettings.
      */
     void saveSettings();
 
-    //=================================================================================================================
+    //=====================================================================================================================
     /**
      * @brief loadSettings      Loads and inits all important settings of this view via QSettings.
      */
     void loadSettings();
 
 public:
-    //=================================================================================================================
+    //=====================================================================================================================
     // Add your public method functions/members here.
-    //=================================================================================================================
 
 private:
-    //=================================================================================================================
+    //=====================================================================================================================
     // Add your private method functions/members here.
-    //=================================================================================================================
+    //=====================================================================================================================
+    /**
+     * @brief onClassifiersChanged
+     * @param index
+     */
+    void onComboBoxClassifiersChanged(int classifierIndex);
 
-    //=================================================================================================================
+    //=====================================================================================================================
+    /**
+     * @brief onTriggerThresholdChanged
+     * @param threshold
+     */
+    void onSpinBoxTriggerThresholdChanged(int triggerThreshold);
+
+    //=====================================================================================================================
+    /**
+     * @brief onTriggerClassChanged
+     * @param currentClass
+     */
+    void onComboBoxTriggerClassChanged(int triggerClass);
+
+    //=====================================================================================================================
     Ui::ClassifiersSettingsView*    m_pUi;              /**< The UI class specified in the designer. */
     QString                         m_sSettingsPath;    /**< The settings path to store the GUI settings to. */
 
 signals:
-    //=================================================================================================================
+    //=====================================================================================================================
     // Add your signals here.
-    //=================================================================================================================
-    //=================================================================================================================
+    //=====================================================================================================================
     /**
-     * @brief Emitted whenever the settings changed and are ready to be retreived.
+     * @brief sig_updateClassifiers
+     * @param classifierIndex
      */
+    void sig_updateClassifiers(const int &classifierIndex);
+
+    //=====================================================================================================================
+    /**
+     * @brief sig_updateTriggerThreshold
+     * @param currentThreshold
+     */
+    void sig_updateTriggerThreshold(const int &currentThreshold);
+
+    //=====================================================================================================================
+    /**
+     * @brief sig_updateTriggerClass
+     * @param currentClass
+     */
+    void sig_updateTriggerClass(const int &currentClass);
 };
 }   //namespace
 

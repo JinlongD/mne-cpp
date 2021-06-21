@@ -56,7 +56,7 @@
 //=====================================================================================================================
 // EIGEN INCLUDES
 //=====================================================================================================================
-#include <Eigen/Core>
+#include <Eigen/SparseCore>
 
 //=====================================================================================================================
 // USED NAMESPACES
@@ -72,16 +72,22 @@ using namespace Eigen;
 //=====================================================================================================================
 Classifiers::Classifiers()
     : m_pCircularBuffer(QSharedPointer<CircularBuffer_Matrix_double>(new CircularBuffer_Matrix_double(40)))
-    , m_bChNumReset(false)
-    , m_iNumPickedCh(1)
-    , m_sPickedChNames({"0"})
-    , m_pMatParser(new MatParser(this))
+    , m_iCurrentClassifier(0)
+    , m_iTriggerThreshold(3)
+    , m_iTriggerClass(1)
 {
 }
 
 //=====================================================================================================================
 Classifiers::~Classifiers()
 {
+    if (m_pParserThread->isRunning()) {
+        m_pParserThread->quit();
+        m_pParserThread->wait();
+    }
+    delete m_pParserThread;
+    delete m_pMatParser;
+
     if(this->isRunning()) {
         stop();
     }
@@ -108,6 +114,15 @@ void Classifiers::init()
     m_pOutput = PluginOutputData<RealTimeMultiSampleArray>::create(this, "ClassifiersOut", "Classifiers output data");
     m_pOutput->measurementData()->setName(this->getName());
     m_outputConnectors.append(m_pOutput);
+
+    m_pParserThread = new QThread;
+    m_pMatParser = new MatParser;
+    m_pMatParser->moveToThread(m_pParserThread);
+    connect(m_pMatParser, &MatParser::sig_isParsingFinished,
+            this, &Classifiers::onIsParsingFinished);
+    connect(this, &Classifiers::sig_getClassifiersFromMat,
+            m_pMatParser, &MatParser::getClassifiers);
+    //connect(m_pParserThread, &QThread::finished, m_pParserThread, &QThread::deleteLater);
 }
 
 //=====================================================================================================================
@@ -164,40 +179,27 @@ void Classifiers::update(SCMEASLIB::Measurement::SPtr pMeasurement)
     if(QSharedPointer<RealTimeMultiSampleArray> pRTMSA = pMeasurement.dynamicCast<RealTimeMultiSampleArray>()) {
         //Fiff information
         if(!m_pFiffInfo) {
+            //m_pFiffInfo = FIFFLIB::FiffInfo::SPtr(new FIFFLIB::FiffInfo(*pRTMSA->info().data()));
             m_pFiffInfo = FIFFLIB::FiffInfo::SPtr::create();
             //m_pFiffInfo = pRTMSA->info();
-
-            QStringList includeChs = QList<QString>() << ""; //"STI 014";
-            QStringList excludeChs = {""};
-            bool want_meg = false;
-            bool want_eeg = true;
-            bool want_stim = false;
-            m_vecEEGChPicks = pRTMSA->info()->pick_types(want_meg, want_eeg, want_stim, includeChs, excludeChs);
-            FIFFLIB::FiffInfo pickedInfo =pRTMSA->info()->pick_info(m_vecEEGChPicks);
-
-            m_iDataBufferSize = pRTMSA->getMultiSampleArray().first().cols();
-            m_sEEGChNames = pickedInfo.ch_names;
-            m_dDataSampFreq = pickedInfo.sfreq;
 
             QList<FIFFLIB::FiffChInfo> fiffChInfoList;
             FIFFLIB::FiffChInfo fiffChInfo;
             QStringList chNameList;
-            fiffChInfo.kind     = 2; //pickedInfo.chs.at(0).kind;    // 502, misc: miscellaneous analog channels.
-            //fiffChInfo.range    = 0.0005; //pickedInfo.chs.at(0).range;   // -1
-            fiffChInfo.unit     = 107; //pickedInfo.chs.at(0).unit;    // -1
+            fiffChInfo.kind     = 502; // 2: eeg; 502: misc (miscellaneous analog channels).
+            //fiffChInfo.range    = -1; // 0.0005: eeg //pickedInfo.chs.at(0).range;
+            fiffChInfo.unit     = -1; // 107: uV
 
-            for (int i = 0; i < m_iNumPickedCh; ++i) {
-                //QString tempStr = QString("BP%1").arg(i);
-                fiffChInfo.ch_name = m_sEEGChNames.at(m_sPickedChNames.at(i).toInt()); // + QString("-BP");
-                chNameList.append(fiffChInfo.ch_name);
-                fiffChInfoList.append(fiffChInfo);
-            }
+            fiffChInfo.ch_name = "Trig";
+            chNameList.append(fiffChInfo.ch_name);
+            fiffChInfoList.append(fiffChInfo);
+
             m_pFiffInfo->filename = "";
             m_pFiffInfo->bads.clear();
-            m_pFiffInfo->nchan = m_iNumPickedCh;
+            m_pFiffInfo->nchan = 1;
             m_pFiffInfo->ch_names = chNameList;
             m_pFiffInfo->chs = fiffChInfoList;
-            m_pFiffInfo->sfreq = m_dDataSampFreq;
+            m_pFiffInfo->sfreq = 20;
 
             m_pOutput->measurementData()->initFromFiffInfo(m_pFiffInfo);
             m_pOutput->measurementData()->setMultiArraySize(1);
@@ -225,8 +227,17 @@ void Classifiers::initPluginControlWidgets()
         QList<QWidget*> plControlWidgets;
 
         // The plugin's control widget
-        ClassifiersSettingsView* pClassifiersSettingsView = new ClassifiersSettingsView(QString("MNESCAN/%1").arg(this->getName()));
-        pClassifiersSettingsView->setObjectName("group_tab_Settings_Your Widget");
+        ClassifiersSettingsView* pClassifiersSettingsView = new ClassifiersSettingsView(m_pMatParser->m_sClassifierNames,
+                                                                                        m_pMatParser->m_sClassNames,
+                                                                                        m_iTriggerThreshold,
+                                                                                        QString("MNESCAN/%1").arg(this->getName()));
+        pClassifiersSettingsView->setObjectName("group_tab_Settings_Classifiers");
+        connect(pClassifiersSettingsView, &ClassifiersSettingsView::sig_updateClassifiers,
+                this, &Classifiers::onClassifiersChanged);
+        connect(pClassifiersSettingsView, &ClassifiersSettingsView::sig_updateTriggerThreshold,
+                this, &Classifiers::onTriggerThresholdChanged);
+        connect(pClassifiersSettingsView, &ClassifiersSettingsView::sig_updateTriggerClass,
+                this, &Classifiers::onTriggerClassChanged);
 
         plControlWidgets.append(pClassifiersSettingsView);
 
@@ -239,77 +250,132 @@ void Classifiers::initPluginControlWidgets()
 //=====================================================================================================================
 void Classifiers::run()
 {
-    MatrixXd matDataInput;
-    MatrixXd matDataOutput; //(m_iNumPickedCh, m_iDataBufferSize);
+    Eigen::MatrixXd matDataInput;
+    Eigen::MatrixXd matDataOutput(1, 4);
+    //Eigen::Matrix<double, 1, 10> matDataOutput;
+
+    Eigen::MatrixXd matWeight;
+    Eigen::MatrixXd matMean;
+    Eigen::VectorXd vecBias;
+
+    /*if (!m_bIsClassifiersInit) {
+        qWarning() << "[Classifiers::run] No classifiers loaded yet!";
+        this->requestInterruption();
+    }
+
+    if (m_iCurrentClassifier == 0) {
+        matWeight = m_pMatParser->m_classifierLDA.matWeight.transpose();
+        vecBias = m_pMatParser->m_classifierLDA.vecBias;
+    } else {
+        matWeight = m_pMatParser->m_classifierFDA.matWeight.transpose();
+        matMean = m_pMatParser->m_classifierFDA.vecMeanProj;
+    }*/
 
     // Wait for Fiff Info
     while(!m_pFiffInfo) {
         msleep(10);
     }
 
-    //=================================================================================================================
+    qint8 iTriggerCounter = 0;
+    qDebug() << m_pMatParser->m_iFeatureNum << "=========";
     while(!isInterruptionRequested()) {
-        //=============================================================================================================
-        // Get the current data
-        if(m_pCircularBuffer->pop(matDataInput)) {
-            //ToDo: Implement your algorithm here
+        // Get the input data
+       if(m_pCircularBuffer->pop(matDataInput)) {
+           //matDataOutput = matDataInput.row(1).leftCols(20);
+           matDataOutput.fill(1);
+       }
 
-            m_qMutex.lock();
-            MatrixXd matTemp(m_iNumPickedCh, m_iDataBufferSize);
-            for (int i = 0; i < m_iNumPickedCh; ++i) {
-                matTemp.row(i) = matDataInput.row(m_vecEEGChPicks(m_sPickedChNames.at(i).toInt()));
+        /*m_qMutex.lock();
+        if (matDataInput.rows() == m_pMatParser->m_iFeatureNum) {
+            if (!predictLDA(matDataInput, matWeight, vecBias)) {
+                iTriggerCounter = 0;
+            } else {
+                iTriggerCounter += 1;
             }
 
-            matDataOutput = matTemp;
-
-            m_qMutex.unlock();
-
-            //Send the data to the connected plugins and the online display
-            //Unocmment this if you also uncommented the m_pOutput in the constructor above
-            if(!isInterruptionRequested()) {
-                m_pOutput->measurementData()->setValue(matDataOutput);
+            if (iTriggerCounter != m_iTriggerThreshold) {
+                //matDataOutput << 0;
+                matDataOutput.fill(0);
+            } else {
+                //matDataOutput << 1;
+                matDataOutput.fill(1);
+                iTriggerCounter -= 1;
             }
+        } else {
+            //matDataOutput << -1;
+            matDataOutput.fill(-1);
+            qWarning() << "[Classifiers::run] Feature dimension is not valid, please reset the Bandpower plugin.";
         }
+        m_qMutex.unlock();*/
 
-        //=============================================================================================================
-        if (m_bChNumReset) {
-            // reset picked channel number
-            //m_qMutex.lock();
 
-            QList<FIFFLIB::FiffChInfo> fiffChInfoList;
-            FIFFLIB::FiffChInfo fiffChInfo;
-            QStringList chNameList;
-            fiffChInfo.kind     = 2; //pickedInfo.chs.at(0).kind;    // 502, misc: miscellaneous analog channels.
-            //fiffChInfo.range    = 0.0005; //pickedInfo.chs.at(0).range;   // -1
-            fiffChInfo.unit     = 107; //pickedInfo.chs.at(0).unit;    // -1
-
-            m_iNumPickedCh = m_sPickedChNames.size();
-
-            for (int i = 0; i < m_iNumPickedCh; ++i) {
-                //QString tempStr = QString("BP%1").arg(i);
-                fiffChInfo.ch_name = m_sEEGChNames.at(m_sPickedChNames.at(i).toInt()); // + QString("-BP");
-                chNameList.append(fiffChInfo.ch_name);
-                fiffChInfoList.append(fiffChInfo);
-            }
-
-            m_pFiffInfo->nchan = m_iNumPickedCh;
-            m_pFiffInfo->ch_names = chNameList;
-            m_pFiffInfo->chs = fiffChInfoList;
-
-            m_pOutput->measurementData()->initFromFiffInfo(m_pFiffInfo);
-            m_pOutput->measurementData()->setMultiArraySize(1);
-            m_pOutput->measurementData()->resetChannelNum(true); // true
-
-            m_bChNumReset = false;
-            //m_qMutex.unlock();
+        //Send the data to the connected plugins and the online display
+        //Unocmment this if you also uncommented the m_pOutput in the constructor above
+        if(!isInterruptionRequested()) {
+            m_pOutput->measurementData()->setValue(matDataOutput);
         }
-        //=============================================================================================================
     }
-    //=================================================================================================================
 }
 
 //=====================================================================================================================
-MatParser* Classifiers::getMatParser()
+void Classifiers::setMatByteArray(const QByteArray &byteArray)
 {
-    return m_pMatParser;
+    m_pMatParser->setMatFile(byteArray);
+    m_bIsClassifiersInit = false;
+}
+
+//=====================================================================================================================
+void Classifiers::parsingMat()
+{
+    m_pParserThread->start();
+    emit sig_getClassifiersFromMat();
+}
+
+//=====================================================================================================================
+void Classifiers::onIsParsingFinished()
+{
+    if (m_pParserThread->isRunning()) {
+        m_pParserThread->quit();
+        //m_pParserThread->wait(500);
+    }
+    m_sClassifiersInfo = "Classifiers:\n"
+                    + tr(">>>>%1:\nClass Number = %2, Feature Number = %3, Cross-Validation Accuracy: %4%.\n")
+                    .arg(m_pMatParser->m_sClassifierNames.at(0))
+                    .arg(m_pMatParser->m_classifierLDA.iClassNum)
+                    .arg(m_pMatParser->m_classifierLDA.iFeatureNum)
+                    .arg(m_pMatParser->m_classifierLDA.dCVAccuracy)
+                    + tr(">>>>%1:\nClass Number = %2, Feature Number = %3, Cross-Validation Accuracy: %4%.\n")
+                    .arg(m_pMatParser->m_sClassifierNames.at(1))
+                    .arg(m_pMatParser->m_classifierFDA.iClassNum)
+                    .arg(m_pMatParser->m_classifierFDA.iFeatureNum)
+                    .arg(m_pMatParser->m_classifierFDA.dCVAccuracy);
+    emit sig_updateClassifiersInfo(m_sClassifiersInfo);
+
+    m_bIsClassifiersInit = true;
+}
+
+//=====================================================================================================================
+void Classifiers::onClassifiersChanged(int classifierIndex)
+{
+    m_qMutex.lock();
+    m_iCurrentClassifier = classifierIndex;
+    m_qMutex.unlock();
+}
+
+//=====================================================================================================================
+
+void Classifiers::onTriggerThresholdChanged(int triggerThreshold)
+{
+    m_qMutex.lock();
+    m_iTriggerThreshold = triggerThreshold;
+    m_qMutex.unlock();
+}
+
+//=====================================================================================================================
+
+void Classifiers::onTriggerClassChanged(int triggerClass)
+{
+    m_qMutex.lock();
+    m_iTriggerClass = triggerClass;
+    m_qMutex.unlock();
 }
