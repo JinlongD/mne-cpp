@@ -79,12 +79,12 @@ class BandpowerSettingsView : public QWidget
     Q_OBJECT
 
 public:
-    typedef QSharedPointer<BandpowerSettingsView> SPtr;         /**< Shared pointer type for BandpowerSettingsView. */
-    typedef QSharedPointer<const BandpowerSettingsView> ConstSPtr; /**< Const shared pointer type for BandpowerSettingsView. */
+    typedef QSharedPointer<BandpowerSettingsView> SPtr;             /**< Shared pointer type for BandpowerSettingsView. */
+    typedef QSharedPointer<const BandpowerSettingsView> ConstSPtr;  /**< Const shared pointer type for BandpowerSettingsView. */
 
-    //=================================================================================================================
+    //=====================================================================================================================
     /**
-     * @brief Constructs a BandpowerSettingsView.
+     * @brief BandpowerSettingsView     Constructs a BandpowerSettingsView.
      * @param [in] sSettingsPath
      * @param [in] parent
      */
@@ -94,68 +94,87 @@ public:
                                    const double& dSampFreq = 100.0,
                                    QWidget *parent = 0);
 
-    //=================================================================================================================
+    //=====================================================================================================================
     /**
      * @brief Destroys the BandpowerSettingsView.
      */
     ~BandpowerSettingsView();
 
-    //=========================================================================================================
+    //=====================================================================================================================
+    // Add your public method functions/members here.
+    //=====================================================================================================================
+
+private:
+    //=====================================================================================================================
+    /**
+     * @brief Saves all important settings of this view via QSettings.
+     */
+    void saveSettings();
+
+    //=====================================================================================================================
+    /**
+     * @brief Loads and inits all important settings of this view via QSettings.
+     */
+    void loadSettings();
+
+    //=====================================================================================================================
+    // Add your private method functions/members here.
+    //=====================================================================================================================
     /**
      * @brief Slot called when m_qDoubleSpinBox_MinFreq change.
      * @param currentValue
      */
     void onDoubleSpinBoxMinFreq(double currentValue);
 
-    //=========================================================================================================
+    //=====================================================================================================================
     /**
      * @brief Slot called when m_qDoubleSpinBox_MaxFreq change.
      * @param currentValue
      */
     void onDoubleSpinBoxMaxFreq(double currentValue);
 
-    //=========================================================================================================
+    //=====================================================================================================================
     /**
      * @brief Slot called when m_qSpinBox_NumBins change.
      * @param currentValue
      */
     void onSpinBoxNumBins(int currentValue);
 
-    //=========================================================================================================
+    //=====================================================================================================================
     /**
      * @brief Slot called when m_qPushButton_SelectChannels change.
      */
     void onPushButtonSelectChannels();
 
-    //=========================================================================================================
+    //=====================================================================================================================
     /**
      * @brief Slot called when m_qDoubleSpinBox_SegmentLength change.
      * @param currentValue
      */
     void onDoubleSpinBoxSegmentLength(double currentValue);
 
-    //=========================================================================================================
+    //=====================================================================================================================
     /**
      * @brief Slot called when m_qDoubleSpinBox_SegmentStep change.
      * @param currentValue
      */
     void onDoubleSpinBoxSegmentStep(double currentValue);
 
-    //=========================================================================================================
+    //=====================================================================================================================
     /**
      * @brief Slot called when m_qComboBox_SpectrumMethod change.
      * @param sSpectrumMethod
      */
     void onComboBoxSpectrumMethod(const QString &sSpectrumMethod);
 
-    //=========================================================================================================
+    //=====================================================================================================================
     /**
      * @brief Slot called when m_qComboBox_DetrendMethod change.
      * @param sDetrendMethod
      */
     void onComboBoxDetrendMethod(const QString &sDetrendMethod);
 
-    //=================================================================================================================
+    //=====================================================================================================================
     /**
      * @brief slot called when picked channels change.
      * @param sPickedChNames
@@ -163,21 +182,8 @@ public:
     void onUpdatePickedChannelNames(QStringList sPickedChNames);
 
 private:
-    //=================================================================================================================
-    /**
-     * @brief Saves all important settings of this view via QSettings.
-     */
-    void saveSettings();
-
-    //=================================================================================================================
-    /**
-     * @brief Loads and inits all important settings of this view via QSettings.
-     */
-    void loadSettings();
-
-private:
-    QString                     m_sSettingsPath;    /**< The settings path to store the GUI settings to. */
     Ui::BandpowerSettingsView*  m_pUi;              /**< The UI class specified in the designer. */
+    QString                     m_sSettingsPath;    /**< The settings path to store the GUI settings to. */
 
     double      m_dDataSampFreq;
     QStringList m_sEEGChNames;
@@ -197,7 +203,7 @@ private:
     QSharedPointer<BandpowerChannelSelectionView> m_pChannelSelectionView;
 
 signals:
-    //=================================================================================================================
+    //=====================================================================================================================
     /**
      * @brief Emitted whenever the settings changed and are ready to be retreived.
      * @param minFreq

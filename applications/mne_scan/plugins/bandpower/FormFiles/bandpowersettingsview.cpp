@@ -72,11 +72,11 @@ BandpowerSettingsView::BandpowerSettingsView(const QString& sSettingsPath,
                                              QWidget *parent)
     : QWidget(parent)
     , m_pUi(new Ui::BandpowerSettingsView)
+    , m_sSettingsPath(sSettingsPath)
     , m_dDataSampFreq(dSampFreq)
     , m_sEEGChNames(sEEGChNames)
     , m_sPickedChIndex(sPickedChNames)
 {
-    m_sSettingsPath = sSettingsPath;
     m_pUi->setupUi(this);
 
     loadSettings();

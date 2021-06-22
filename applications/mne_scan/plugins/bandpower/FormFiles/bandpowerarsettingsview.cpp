@@ -60,24 +60,23 @@ using namespace BANDPOWERPLUGIN;
 // DEFINE MEMBER METHODS
 //=====================================================================================================================
 BandpowerARSettingsView::BandpowerARSettingsView(const QString& sSettingsPath,
-                               QWidget *parent)
+                                                 QWidget *parent)
     : QWidget(parent)
     , m_pUi(new Ui::BandpowerARSettingsView)
+    , m_sSettingsPath(sSettingsPath)
 {
-    m_sSettingsPath = sSettingsPath;
     m_pUi->setupUi(this);
-
-    //this->setWindowTitle("AR Settings");
 
     loadSettings();
 
     //m_pUi->m_qSpinBox_AROrder->setMaximumWidth(100);
     m_pUi->m_qSpinBox_AROrder->setValue(m_iAROrder);
-    connect(m_pUi->m_qSpinBox_AROrder, &QSpinBox::editingFinished,
+    //connect(m_pUi->m_qSpinBox_AROrder, &QSpinBox::editingFinished, this, &BandpowerARSettingsView::onSpinBoxAROrder);
+    connect(m_pUi->m_qSpinBox_AROrder, QOverload<int>::of(&QSpinBox::valueChanged),
             this, &BandpowerARSettingsView::onSpinBoxAROrder);
 
     m_pUi->m_qSpinBox_EvaluationPoints->setValue(m_iEvaluationPoints);
-    connect(m_pUi->m_qSpinBox_EvaluationPoints, &QSpinBox::editingFinished,
+    connect(m_pUi->m_qSpinBox_EvaluationPoints, QOverload<int>::of(&QSpinBox::valueChanged),
             this, &BandpowerARSettingsView::onSpinBoxEvaluationPoints);
 
     m_pUi->m_qLabel_SamplingPoints->setDisabled(true);
@@ -90,41 +89,6 @@ BandpowerARSettingsView::~BandpowerARSettingsView()
     saveSettings();
 
     delete m_pUi;
-}
-
-//=====================================================================================================================
-void BandpowerARSettingsView::onSpinBoxAROrder()
-{
-    double value = m_pUi->m_qSpinBox_AROrder->value();
-
-    if(value == m_iAROrder) {
-        return;
-    } else if (value < 1) {
-        value = 1;
-        qDebug() << "ARSettingsView::onChangeSpinBoxAROrder: "
-                 << "AR order < 1 not allowed. Value has been reset to 1.";
-    }
-
-    m_iAROrder = value;
-
-    emit sig_updateAROrder(m_iAROrder);
-
-    saveSettings();
-}
-
-//=====================================================================================================================
-void BandpowerARSettingsView::onSpinBoxEvaluationPoints()
-{
-    double value = m_pUi->m_qSpinBox_EvaluationPoints->value();
-
-    if(value == m_iEvaluationPoints)
-        return;
-
-    m_iEvaluationPoints = value;
-
-    emit sig_updateAREvaluationPoints(m_iEvaluationPoints);
-
-    saveSettings();
 }
 
 //=====================================================================================================================
@@ -151,4 +115,38 @@ void BandpowerARSettingsView::loadSettings()
     QSettings settings("MNECPP");
     m_iAROrder          = settings.value(m_sSettingsPath + QString("/arOrder"), 16).toInt(); // init/default
     m_iEvaluationPoints = settings.value(m_sSettingsPath + QString("/evaluationPoints"), 1).toInt();
+}
+
+//=====================================================================================================================
+void BandpowerARSettingsView::onSpinBoxAROrder(int value)
+{
+    if (value < 1) {
+        value = 1;
+        qDebug() << "ARSettingsView::onChangeSpinBoxAROrder: "
+                 << "AR order < 1 not allowed. Value has been reset to 1.";
+    }
+
+    m_iAROrder = value;
+
+    emit sig_updateAROrder(m_iAROrder);
+
+    saveSettings();
+}
+
+//=====================================================================================================================
+void BandpowerARSettingsView::onSpinBoxEvaluationPoints(int value)
+{
+    m_iEvaluationPoints = value;
+
+    emit sig_updateAREvaluationPoints(m_iEvaluationPoints);
+
+    saveSettings();
+}
+
+//=====================================================================================================================
+void BandpowerARSettingsView::onSpinBoxSamplingPoints(int value)
+{
+    m_iSamplingPoints = value;
+
+    saveSettings();
 }

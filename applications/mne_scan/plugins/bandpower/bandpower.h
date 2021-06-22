@@ -51,9 +51,9 @@
 //=====================================================================================================================
 // QT INCLUDES
 //=====================================================================================================================
-//#include <QtWidgets>
-//#include <QtCore/QtPlugin>
-//#include <QPointer>
+#include <QtWidgets>
+#include <QtCore/QtPlugin>
+#include <QPointer>
 
 //=====================================================================================================================
 // EIGEN INCLUDES
@@ -213,11 +213,8 @@ protected:
 private:
     FIFFLIB::FiffInfo::SPtr     m_pFiffInfoInput;     /**< Input fiff measurement info.*/
     FIFFLIB::FiffInfo::SPtr     m_pFiffInfoOutput;    /**< Output fiff measurement info.*/
-
     //QSharedPointer<BandpowerSettingsView>    m_pSettingsView; /**< The widget used to control this plugin by the user.*/
-
     QSharedPointer<UTILSLIB::CircularBuffer_Matrix_double>       m_pBandpowerBuffer;          /**< Holds incoming raw data. */
-
     SCSHAREDLIB::PluginInputData<SCMEASLIB::RealTimeMultiSampleArray>::SPtr      m_pBandpowerInput;      /**< The incoming data.*/
     SCSHAREDLIB::PluginOutputData<SCMEASLIB::RealTimeMultiSampleArray>::SPtr     m_pBandpowerOutput;     /**< The outgoing data.*/
 

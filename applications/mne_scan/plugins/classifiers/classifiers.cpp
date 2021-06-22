@@ -72,6 +72,7 @@ using namespace Eigen;
 //=====================================================================================================================
 Classifiers::Classifiers()
     : m_pCircularBuffer(QSharedPointer<CircularBuffer_Matrix_double>(new CircularBuffer_Matrix_double(40)))
+    , m_bPluginControlWidgetsInit(false)
     , m_iCurrentClassifier(0)
     , m_iTriggerThreshold(3)
     , m_iTriggerClass(1)
@@ -179,20 +180,20 @@ void Classifiers::update(SCMEASLIB::Measurement::SPtr pMeasurement)
     if(QSharedPointer<RealTimeMultiSampleArray> pRTMSA = pMeasurement.dynamicCast<RealTimeMultiSampleArray>()) {
         //Fiff information
         if(!m_pFiffInfo) {
-            //m_pFiffInfo = FIFFLIB::FiffInfo::SPtr(new FIFFLIB::FiffInfo(*pRTMSA->info().data()));
-            m_pFiffInfo = FIFFLIB::FiffInfo::SPtr::create();
-            //m_pFiffInfo = pRTMSA->info();
-
             QList<FIFFLIB::FiffChInfo> fiffChInfoList;
             FIFFLIB::FiffChInfo fiffChInfo;
             QStringList chNameList;
-            fiffChInfo.kind     = 502; // 2: eeg; 502: misc (miscellaneous analog channels).
-            //fiffChInfo.range    = -1; // 0.0005: eeg //pickedInfo.chs.at(0).range;
-            fiffChInfo.unit     = -1; // 107: uV
+            fiffChInfo.kind     = 2; // 2: eeg; 502: misc (miscellaneous analog channels).
+            //fiffChInfo.range    = 0.000001; // 0.0005: eeg //pickedInfo.chs.at(0).range;
+            fiffChInfo.unit     = 107; // 107: uV, -1: no unit; 0: unitless
 
             fiffChInfo.ch_name = "Trig";
             chNameList.append(fiffChInfo.ch_name);
             fiffChInfoList.append(fiffChInfo);
+
+            //m_pFiffInfo = FIFFLIB::FiffInfo::SPtr(new FIFFLIB::FiffInfo(*pRTMSA->info().data()));
+            m_pFiffInfo = FIFFLIB::FiffInfo::SPtr::create();
+            //m_pFiffInfo = pRTMSA->info();
 
             m_pFiffInfo->filename = "";
             m_pFiffInfo->bads.clear();
@@ -282,7 +283,9 @@ void Classifiers::run()
         // Get the input data
        if(m_pCircularBuffer->pop(matDataInput)) {
            //matDataOutput = matDataInput.row(1).leftCols(20);
-           matDataOutput.fill(1);
+           //matDataOutput.fill(1);
+           matDataOutput.leftCols(2).fill(0);
+           matDataOutput.rightCols(2).fill(1);
        }
 
         /*m_qMutex.lock();

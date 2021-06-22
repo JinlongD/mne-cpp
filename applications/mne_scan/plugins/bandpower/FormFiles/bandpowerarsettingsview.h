@@ -80,7 +80,7 @@ public:
     typedef QSharedPointer<BandpowerARSettingsView> SPtr;    /**< Shared pointer type for BandpowerARSettingsView. */
     typedef QSharedPointer<const BandpowerARSettingsView> ConstSPtr; /**< Const shared pointer type for BandpowerARSettingsView. */
 
-    //=================================================================================================================
+    //=====================================================================================================================
     /**
      * @brief Constructs a BandpowerARSettingsView.
      * @param [in] sSettingsPath
@@ -88,56 +88,72 @@ public:
      */
     explicit BandpowerARSettingsView(const QString& sSettingsPath = "", QWidget *parent = 0);
 
-    //=================================================================================================================
+    //=====================================================================================================================
     /**
      * @brief Destroys the BandpowerARSettingsView.
      */
     ~BandpowerARSettingsView();
 
-    //=================================================================================================================
-    /**
-     * @brief Slot called when m_qSpinBox_AROrder change.
-     */
-    void onSpinBoxAROrder();
-
-    //=================================================================================================================
-    /**
-     * @brief Slot called when m_qSpinBox_EvaluationPoints change.
-     */
-    void onSpinBoxEvaluationPoints();
-
-    //=================================================================================================================
-    /**
-     * @brief Slot called when m_qSpinBox_SamplingPoints change.
-     */
-    void onSpinBoxSamplingPoints();
+    //=====================================================================================================================
+    // Add your public method functions/members here.
+    //=====================================================================================================================
 
 private:
-    //=================================================================================================================
+    //=====================================================================================================================
     /**
      * @brief Saves all important settings of this view via QSettings.
      */
     void saveSettings();
 
-    //=================================================================================================================
+    //=====================================================================================================================
     /**
      * @brief Loads and inits all important settings of this view via QSettings.
      */
     void loadSettings();
 
-private:
+    //=====================================================================================================================
+    // Add your private method functions/members here.
+    //=====================================================================================================================
+    /**
+     * @brief onSpinBoxAROrder      Slot called when m_qSpinBox_AROrder change.
+     * @param value
+     */
+    void onSpinBoxAROrder(int value);
+
+    //=====================================================================================================================
+    /**
+     * @brief onSpinBoxEvaluationPoints     Slot called when m_qSpinBox_EvaluationPoints change.
+     * @param value
+     */
+    void onSpinBoxEvaluationPoints(int value);
+
+    //=====================================================================================================================
+    /**
+     * @brief onSpinBoxSamplingPoints       Slot called when m_qSpinBox_SamplingPoints change.
+     * @param value
+     */
+    void onSpinBoxSamplingPoints(int value);
+
+    //=====================================================================================================================
+    Ui::BandpowerARSettingsView*    m_pUi;              /**< The UI class specified in the designer. */
+    QString     m_sSettingsPath;    /**< The settings path to store the GUI settings to. */
     int         m_iAROrder;
     int         m_iEvaluationPoints;
-    QString     m_sSettingsPath;    /**< The settings path to store the GUI settings to. */
-    Ui::BandpowerARSettingsView*      m_pUi; /**< The UI class specified in the designer. */
+    int         m_iSamplingPoints;
 
 signals:
     //=================================================================================================================
     /**
-     * @brief Emitted whenever the settings changed and are ready to be retreived.
+     * @brief sig_updateAROrder             Emitted whenever the settings changed and are ready to be retreived.
      * @param value
      */
     void sig_updateAROrder(int value);
+
+    //=====================================================================================================================
+    /**
+     * @brief sig_updateAREvaluationPoints  Emitted whenever the settings changed and are ready to be retreived.
+     * @param value
+     */
     void sig_updateAREvaluationPoints(int value);
 
 };

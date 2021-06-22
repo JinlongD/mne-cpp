@@ -91,7 +91,7 @@ public:
      *                                  ClassifiersSettingsView is deleted when its parent is deleted.
      */
     explicit ClassifiersSettingsView(const QStringList &classifierNames = {}, const QStringList &classNames = {},
-                                     const int &threshold = 0, const QString &sSettingsPath = "", QWidget *parent = 0);
+                                     const int &threshold = 3, const QString &sSettingsPath = "", QWidget *parent = 0);
 
     //=====================================================================================================================
     /**
@@ -100,6 +100,10 @@ public:
      *                                  The application exits if ClassifiersSetupWidget is the main widget.
      */
     ~ClassifiersSettingsView();
+
+    //=====================================================================================================================
+    // Add your public method functions/members here.
+    //=====================================================================================================================
 
 private:
     //=====================================================================================================================
@@ -114,11 +118,6 @@ private:
      */
     void loadSettings();
 
-public:
-    //=====================================================================================================================
-    // Add your public method functions/members here.
-
-private:
     //=====================================================================================================================
     // Add your private method functions/members here.
     //=====================================================================================================================
