@@ -91,7 +91,7 @@ public:
      */
     explicit BandpowerChannelSelectionView(const QStringList &sEEGChNames = {}, // transfer params by QSettings.
                                            const QStringList &sPickedChNames = {},
-                                           QWidget *parent = nullptr);
+                                           QWidget *parent = 0);
 
     //=================================================================================================================
     /**

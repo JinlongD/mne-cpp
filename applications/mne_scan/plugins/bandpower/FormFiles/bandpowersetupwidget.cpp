@@ -69,4 +69,7 @@ BandpowerSetupWidget::BandpowerSetupWidget(Bandpower* pBandpower, QWidget *paren
 //=====================================================================================================================
 BandpowerSetupWidget::~BandpowerSetupWidget()
 {
+    //qDebug() << "[BandpowerSetupWidget::~BandpowerSetupWidget]";
+    //delete m_pBandpower;
+    //delete m_pUi;
 }

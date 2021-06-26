@@ -97,6 +97,7 @@ Bandpower::Bandpower()
 Bandpower::~Bandpower()
 {
     if(this->isRunning()) {
+        qDebug() << "[Bandpower::~Bandpower] if this thread is running.";
         stop();
     }
 }
@@ -182,7 +183,6 @@ bool Bandpower::stop()
     m_pBandpowerBuffer->clear();
 
     m_bPluginControlWidgetsInit = false;
-    qDebug() << "========stop";
     return true;
 }
 
@@ -201,6 +201,7 @@ QString Bandpower::getName() const
 //=====================================================================================================================
 QWidget* Bandpower::setupWidget()
 {
+    qDebug() << "[Bandpower::setupWidget]";
     BandpowerSetupWidget* pSetupWidget = new BandpowerSetupWidget(this);
     return pSetupWidget;
 }
@@ -286,44 +287,47 @@ void Bandpower::update(SCMEASLIB::Measurement::SPtr pMeasurement)
 //=====================================================================================================================
 void Bandpower::initPluginControlWidgets()
 {
-    //if(m_pFiffInfoOutput) {
-    QList<QWidget*> plControlWidgets;
+    if(m_pFiffInfoOutput) {
+        QList<QWidget*> plControlWidgets;
 
-    // The plugin's control widgets
-    // BandpowerSettingsView
-    BandpowerSettingsView* pBandpowerSettingsView = new BandpowerSettingsView(m_sSettingsPath, m_sDataEEGChNames, m_sPickedChNames, m_dDataSampFreq);
-    //m_pBandpowerSettingsView = new BandpowerSettingsView(m_sSettingsPath, m_sDataEEGChNames, m_sPickedChNames, m_dDataSampFreq);
-    pBandpowerSettingsView->setObjectName("group_tab_Settings_Bandpower Settings");
-    connect(pBandpowerSettingsView, &BandpowerSettingsView::sig_updateMinFreq,
-            this, &Bandpower::onUpdateBandpowerMinFreq);
-    connect(pBandpowerSettingsView, &BandpowerSettingsView::sig_updateMaxFreq,
-            this, &Bandpower::onUpdateBandpowerMaxFreq);
-    connect(pBandpowerSettingsView, &BandpowerSettingsView::sig_updatePickedChannels,
-            this, &Bandpower::onUpdateBandpowerPickedChannels);
-    connect(pBandpowerSettingsView, &BandpowerSettingsView::sig_updateNumBins,
-            this, &Bandpower::onUpdateBandpowerNumBins);
-    connect(pBandpowerSettingsView, &BandpowerSettingsView::sig_updateSegmentLength,
-            this, &Bandpower::onUpdateBandpowerSegmentLength);
-    connect(pBandpowerSettingsView, &BandpowerSettingsView::sig_updateSegmentStep,
-            this, &Bandpower::onUpdateBandpowerSegmentStep);
-    connect(pBandpowerSettingsView, &BandpowerSettingsView::sig_updateSpectrumMethod,
-            this, &Bandpower::onUpdateBandpowerSpectrumMethod);
-    connect(pBandpowerSettingsView, &BandpowerSettingsView::sig_updateDetrendMethod,
-            this, &Bandpower::onUpdateBandpowerDetrendMethod);
-    plControlWidgets.append(pBandpowerSettingsView);
+        // The plugin's control widgets
+        // BandpowerSettingsView
+        BandpowerSettingsView* pBandpowerSettingsView = new BandpowerSettingsView(m_sSettingsPath, m_sDataEEGChNames, m_sPickedChNames, m_dDataSampFreq);
+        //m_pBandpowerSettingsView = new BandpowerSettingsView(m_sSettingsPath, m_sDataEEGChNames, m_sPickedChNames, m_dDataSampFreq);
+        pBandpowerSettingsView->setObjectName("group_tab_Settings_Bandpower Settings");
+        connect(pBandpowerSettingsView, &BandpowerSettingsView::sig_updateMinFreq,
+                this, &Bandpower::onUpdateBandpowerMinFreq);
+        connect(pBandpowerSettingsView, &BandpowerSettingsView::sig_updateMaxFreq,
+                this, &Bandpower::onUpdateBandpowerMaxFreq);
+        connect(pBandpowerSettingsView, &BandpowerSettingsView::sig_updatePickedChannels,
+                this, &Bandpower::onUpdateBandpowerPickedChannels);
+        connect(pBandpowerSettingsView, &BandpowerSettingsView::sig_updateNumBins,
+                this, &Bandpower::onUpdateBandpowerNumBins);
+        connect(pBandpowerSettingsView, &BandpowerSettingsView::sig_updateSegmentLength,
+                this, &Bandpower::onUpdateBandpowerSegmentLength);
+        connect(pBandpowerSettingsView, &BandpowerSettingsView::sig_updateSegmentStep,
+                this, &Bandpower::onUpdateBandpowerSegmentStep);
+        connect(pBandpowerSettingsView, &BandpowerSettingsView::sig_updateSpectrumMethod,
+                this, &Bandpower::onUpdateBandpowerSpectrumMethod);
+        connect(pBandpowerSettingsView, &BandpowerSettingsView::sig_updateDetrendMethod,
+                this, &Bandpower::onUpdateBandpowerDetrendMethod);
+        plControlWidgets.append(pBandpowerSettingsView);
 
-    // ARSettingsView
-    BandpowerARSettingsView* pBandpowerARSettingsView = new BandpowerARSettingsView(m_sSettingsPath);
-    //m_pBandpowerARSettingsView = new BandpowerARSettingsView(m_sSettingsPath);
-    pBandpowerARSettingsView->setObjectName("group_tab_Settings_AR Settings");
-    connect(pBandpowerARSettingsView, &BandpowerARSettingsView::sig_updateAROrder,
-            this, &Bandpower::onUpdateBandpowerAROrder);
-    connect(pBandpowerARSettingsView, &BandpowerARSettingsView::sig_updateAREvaluationPoints,
-            this, &Bandpower::onUpdateBandpowerAREvaluationPoints);
-    plControlWidgets.append(pBandpowerARSettingsView);
+        // ARSettingsView
+        BandpowerARSettingsView* pBandpowerARSettingsView = new BandpowerARSettingsView(m_sSettingsPath);
+        //m_pBandpowerARSettingsView = new BandpowerARSettingsView(m_sSettingsPath);
+        pBandpowerARSettingsView->setObjectName("group_tab_Settings_AR Settings");
+        connect(pBandpowerARSettingsView, &BandpowerARSettingsView::sig_updateAROrder,
+                this, &Bandpower::onUpdateBandpowerAROrder);
+        connect(pBandpowerARSettingsView, &BandpowerARSettingsView::sig_updateAREvaluationPoints,
+                this, &Bandpower::onUpdateBandpowerAREvaluationPoints);
+        plControlWidgets.append(pBandpowerARSettingsView);
 
-    // emit plugin's control widgets
-    emit pluginControlWidgetsChanged(plControlWidgets, this->getName());
+        // emit plugin's control widgets
+        emit pluginControlWidgetsChanged(plControlWidgets, this->getName());
+
+        m_bPluginControlWidgetsInit = true;
+    }
 
     /*// channel selection view
         m_pChannelInfoModel = DISPLIB::ChannelInfoModel::SPtr::create(m_pFiffInfoInput, this);
@@ -344,9 +348,6 @@ void Bandpower::initPluginControlWidgets()
                 m_pChannelSelectionView.data(), &DISPLIB::ChannelSelectionView::setUserSelection);
         connect(m_pChannelDataView.data(), &DISPLIB::RtFiffRawView::selectedChannelsResetted,
                 m_pChannelSelectionView.data(), &DISPLIB::ChannelSelectionView::resetUserSelection);*/
-
-    m_bPluginControlWidgetsInit = true;
-    //}
 }
 
 //=====================================================================================================================
@@ -428,98 +429,99 @@ void Bandpower::run()
 
         m_qMutex.unlock();
 
-
         if(!isInterruptionRequested()) {
             // send the data to the connected plugins and the online display
             // unocmment this if you also uncommented the m_pOutput in the constructor above
             m_pBandpowerOutput->measurementData()->setValue(matBandpower);
+        }
 
-            // move forward the segment matrix entries (i.e., matSegment and matTemp) by one iSegmentStep.
-            if (!m_bBandpowerChNumReset && !m_bBandpowerSegmentReset) {
-                //m_qMutex.lock();
-                if (matTemp.cols() >= m_iSegmentStep) {
-                    MatrixXd tempSeg(m_iNumPickedChannels, m_iSegmentLength);
-                    tempSeg << matSegment.rightCols(m_iSegmentLength - m_iSegmentStep), matTemp.leftCols(m_iSegmentStep);
-                    matSegment = tempSeg;
-                    matTemp = matTemp.rightCols(matTemp.cols() - m_iSegmentStep);
-                } else {
-                    while (matTemp.cols() < m_iSegmentStep) {
-                        MatrixXd temp(m_iNumPickedChannels, matTemp.cols() + m_iDataBufferSize);
-                        MatrixXd tempDataInput(m_iNumPickedChannels, m_iDataBufferSize);
-                        while(!m_pBandpowerBuffer->pop(matDataInput));
-                        for (int i = 0; i < m_iNumPickedChannels; ++i) {
-                            matDataInput *= 1.0e6;
-                            tempDataInput.row(i) = matDataInput.row(m_vecEEGChPicks(m_sPickedChNames.at(i).toInt()));
-                        }
-                        temp << matTemp, tempDataInput;
-                        matTemp = temp;
-                    }
-                    MatrixXd tempSeg(m_iNumPickedChannels, m_iSegmentLength);
-                    tempSeg << matSegment.rightCols(m_iSegmentLength - m_iSegmentStep), matTemp.leftCols(m_iSegmentStep);
-                    matSegment = tempSeg;
-                    matTemp = matTemp.rightCols(matTemp.cols() - m_iSegmentStep);
-                }
-                //m_qMutex.unlock();
+        //if(!isInterruptionRequested()) {
+        // move forward the segment matrix entries (i.e., matSegment and matTemp) by one iSegmentStep.
+        if (!m_bBandpowerChNumReset && !m_bBandpowerSegmentReset) {
+            //m_qMutex.lock();
+            if (matTemp.cols() >= m_iSegmentStep) {
+                MatrixXd tempSeg(m_iNumPickedChannels, m_iSegmentLength);
+                tempSeg << matSegment.rightCols(m_iSegmentLength - m_iSegmentStep), matTemp.leftCols(m_iSegmentStep);
+                matSegment = tempSeg;
+                matTemp = matTemp.rightCols(matTemp.cols() - m_iSegmentStep);
             } else {
-                // reset bandpower channels when picked channels (channel number or/and channel names) and/or number of bins is changed.
-                if (m_bBandpowerChNumReset) {
-                    //m_qMutex.lock();
-                    // Rearrange the output fiffinfo here.
-                    m_iNumPickedChannels = m_sPickedChNames.size();
-                    m_iBandpowerNumChannels = m_iNumPickedChannels*m_iNumBins;
-
-                    QList<FIFFLIB::FiffChInfo> fiffChInfoList;
-                    FIFFLIB::FiffChInfo fiffChInfo;
-                    QStringList chNameList;
-                    fiffChInfo.kind     = 502; //pickedInfo.chs.at(0).kind;    // 502, misc: miscellaneous analog channels.
-                    //fiffChInfo.range    = -1; //pickedInfo.chs.at(0).range;   // -1
-                    fiffChInfo.unit     = 0; //pickedInfo.chs.at(0).unit;    // -1
+                while (matTemp.cols() < m_iSegmentStep) {
+                    MatrixXd temp(m_iNumPickedChannels, matTemp.cols() + m_iDataBufferSize);
+                    MatrixXd tempDataInput(m_iNumPickedChannels, m_iDataBufferSize);
+                    while(!m_pBandpowerBuffer->pop(matDataInput));
                     for (int i = 0; i < m_iNumPickedChannels; ++i) {
-                        for (int j = 0; j < m_iNumBins; ++j) {
-                            fiffChInfo.ch_name = m_sDataEEGChNames.at(m_sPickedChNames.at(i).toInt()) + QString("-BP%1").arg(j);
-                            chNameList.append(fiffChInfo.ch_name);
-                            fiffChInfoList.append(fiffChInfo);
-                        }
-                    }
-
-                    //m_pFiffInfoOutput->filename = "Bandpower";    // not necessary to change.
-                    //m_pFiffInfoOutput->bads.clear();              // not necessary to change.
-                    m_pFiffInfoOutput->nchan = m_iBandpowerNumChannels;
-                    m_pFiffInfoOutput->ch_names = chNameList;
-                    m_pFiffInfoOutput->chs = fiffChInfoList;
-
-                    m_pBandpowerOutput->measurementData()->resetChannelNum(true);
-                    m_pBandpowerOutput->measurementData()->initFromFiffInfo(m_pFiffInfoOutput);
-                    m_pBandpowerOutput->measurementData()->setMultiArraySize(1);
-
-                    m_bBandpowerChNumReset = false;
-                    //m_qMutex.unlock();
-                }
-
-                // reset data segment for the first data block when segment length and/or step is changed.
-                if (m_bBandpowerSegmentReset) {
-                    //m_qMutex.lock();
-
-                    // detremine spectrum resolution - calculation only for FFT, but we keep it for both methods here to keep the resolution.
-                    vecFFTResFreqs = Spectral::calculateFFTFreqs(m_iSegmentLength, m_dDataSampFreq);
-
-                    // prepare storage for the first data segment.
-                    MatrixXd    matTempSeg(m_iNumPickedChannels, (m_iSegmentLength/m_iDataBufferSize + 1)*m_iDataBufferSize);
-                    for (int i = 0; i <= m_iSegmentLength/m_iDataBufferSize; ++i) {
-                        while (!m_pBandpowerBuffer->pop(matDataInput));
                         matDataInput *= 1.0e6;
-                        for (int j = 0; j < m_iNumPickedChannels; ++j) {
-                            matTempSeg.block(j, i*m_iDataBufferSize, 1, m_iDataBufferSize) = matDataInput.row(m_vecEEGChPicks(m_sPickedChNames.at(j).toInt()));
-                        }
+                        tempDataInput.row(i) = matDataInput.row(m_vecEEGChPicks(m_sPickedChNames.at(i).toInt()));
                     }
-                    matSegment = matTempSeg.leftCols(m_iSegmentLength);
-                    matTemp = matTempSeg.rightCols(matTempSeg.cols() - m_iSegmentLength);
-
-                    m_bBandpowerSegmentReset = false;
-                    //m_qMutex.unlock();
+                    temp << matTemp, tempDataInput;
+                    matTemp = temp;
                 }
+                MatrixXd tempSeg(m_iNumPickedChannels, m_iSegmentLength);
+                tempSeg << matSegment.rightCols(m_iSegmentLength - m_iSegmentStep), matTemp.leftCols(m_iSegmentStep);
+                matSegment = tempSeg;
+                matTemp = matTemp.rightCols(matTemp.cols() - m_iSegmentStep);
             }
-        } //if(!isInterruptionRequested())
+            //m_qMutex.unlock();
+        } else {
+            // reset bandpower channels when picked channels (channel number or/and channel names) and/or number of bins is changed.
+            if (m_bBandpowerChNumReset) {
+                //m_qMutex.lock();
+                // Rearrange the output fiffinfo here.
+                m_iNumPickedChannels = m_sPickedChNames.size();
+                m_iBandpowerNumChannels = m_iNumPickedChannels*m_iNumBins;
+
+                QList<FIFFLIB::FiffChInfo> fiffChInfoList;
+                FIFFLIB::FiffChInfo fiffChInfo;
+                QStringList chNameList;
+                fiffChInfo.kind     = 502; //pickedInfo.chs.at(0).kind;    // 502, misc: miscellaneous analog channels.
+                //fiffChInfo.range    = -1; //pickedInfo.chs.at(0).range;   // -1
+                fiffChInfo.unit     = 0; //pickedInfo.chs.at(0).unit;    // -1
+                for (int i = 0; i < m_iNumPickedChannels; ++i) {
+                    for (int j = 0; j < m_iNumBins; ++j) {
+                        fiffChInfo.ch_name = m_sDataEEGChNames.at(m_sPickedChNames.at(i).toInt()) + QString("-BP%1").arg(j);
+                        chNameList.append(fiffChInfo.ch_name);
+                        fiffChInfoList.append(fiffChInfo);
+                    }
+                }
+
+                //m_pFiffInfoOutput->filename = "Bandpower";    // not necessary to change.
+                //m_pFiffInfoOutput->bads.clear();              // not necessary to change.
+                m_pFiffInfoOutput->nchan = m_iBandpowerNumChannels;
+                m_pFiffInfoOutput->ch_names = chNameList;
+                m_pFiffInfoOutput->chs = fiffChInfoList;
+
+                m_pBandpowerOutput->measurementData()->resetChannelNum(true);
+                m_pBandpowerOutput->measurementData()->initFromFiffInfo(m_pFiffInfoOutput);
+                m_pBandpowerOutput->measurementData()->setMultiArraySize(1);
+
+                m_bBandpowerChNumReset = false;
+                //m_qMutex.unlock();
+            }
+
+            // reset data segment for the first data block when segment length and/or step is changed.
+            if (m_bBandpowerSegmentReset) {
+                //m_qMutex.lock();
+
+                // detremine spectrum resolution - calculation only for FFT, but we keep it for both methods here to keep the resolution.
+                vecFFTResFreqs = Spectral::calculateFFTFreqs(m_iSegmentLength, m_dDataSampFreq);
+
+                // prepare storage for the first data segment.
+                MatrixXd    matTempSeg(m_iNumPickedChannels, (m_iSegmentLength/m_iDataBufferSize + 1)*m_iDataBufferSize);
+                for (int i = 0; i <= m_iSegmentLength/m_iDataBufferSize; ++i) {
+                    while (!m_pBandpowerBuffer->pop(matDataInput));
+                    matDataInput *= 1.0e6;
+                    for (int j = 0; j < m_iNumPickedChannels; ++j) {
+                        matTempSeg.block(j, i*m_iDataBufferSize, 1, m_iDataBufferSize) = matDataInput.row(m_vecEEGChPicks(m_sPickedChNames.at(j).toInt()));
+                    }
+                }
+                matSegment = matTempSeg.leftCols(m_iSegmentLength);
+                matTemp = matTempSeg.rightCols(matTempSeg.cols() - m_iSegmentLength);
+
+                m_bBandpowerSegmentReset = false;
+                //m_qMutex.unlock();
+            }
+        }
+        //} //if(!isInterruptionRequested())
     } // while (!isInterruptionRequested())
 }
 
